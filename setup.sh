@@ -22,31 +22,37 @@ fi
 # 2. Install Docker & Docker Compose
 echo "[INFO] Installing Docker..."
 sudo apt-get install -y docker.io
-# Try to install the modern plugin, fallback to classic if needed
-sudo apt-get install -y docker-compose-plugin || sudo apt-get install -y docker-compose
+
+# Attempt to install Docker Compose through various package names
+echo "[INFO] Installing Docker Compose..."
+sudo apt-get install -y docker-compose-plugin || sudo apt-get install -y docker-compose || sudo pip3 install docker-compose
 
 # 3. Setup the Auto-Start Service
-if [ -f "molly-wizard.service" ]; then
-    echo "[INFO] Configuring Setup Wizard to start on boot..."
-    sudo cp molly-wizard.service /etc/systemd/system/
+# This checks for the filename you chose: molly-wizard.service
+SERVICE_FILE="molly-wizard.service"
+
+if [ -f "$SERVICE_FILE" ]; then
+    echo "[INFO] Configuring $SERVICE_FILE to start on boot..."
+    sudo cp "$SERVICE_FILE" /etc/systemd/system/
     sudo systemctl daemon-reload
-    sudo systemctl enable molly-wizard.service
-    sudo systemctl start molly-wizard.service
+    sudo systemctl enable "$SERVICE_FILE"
+    sudo systemctl start "$SERVICE_FILE"
 else
-    echo "[ERROR] molly-wizard.service NOT FOUND in $PROJECT_DIR"
-    echo "Check your filename and try again."
+    echo "[ERROR] $SERVICE_FILE NOT FOUND in $PROJECT_DIR"
+    echo "Please check your filename and try again."
     exit 1
 fi
 
-# 4. Provide the URL
+# 4. Provide the Web Configuration URL
 IP_ADDR=$(hostname -I | awk '{print $1}')
 echo "------------------------------------------------------"
 echo "SETUP WIZARD IS LIVE"
 echo "Please open your browser and go to:"
-echo "http://$IP_ADDR  OR  http://$(hostname).local"
+echo "URL 1: http://$IP_ADDR"
+echo "URL 2: http://$(hostname).local"
 echo "------------------------------------------------------"
 
-# 5. Wait for the .env file
+# 5. Wait for the .env file to be created by the Wizard
 echo "[INFO] Waiting for web configuration to complete..."
 while [ ! -f .env ]
 do
@@ -55,6 +61,7 @@ done
 
 # 6. Bring up the Docker Stack
 echo "[INFO] Credentials received. Starting services..."
+# Support both 'docker compose' (v2) and 'docker-compose' (v1)
 sudo docker compose up -d || sudo docker-compose up -d
 
 echo "[SUCCESS] Gateway is now running!"
