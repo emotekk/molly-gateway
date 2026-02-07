@@ -1,0 +1,15 @@
+[Unit]
+Description=Molly-Pi Setup Wizard
+After=network.target
+
+[Service]
+# This path must match exactly where you put the files on the Pi
+ExecStart=/usr/bin/python3 /home/pi/molly-gateway/wizard.py
+WorkingDirectory=/home/pi/molly-gateway
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
