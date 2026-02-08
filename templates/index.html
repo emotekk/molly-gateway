@@ -13,13 +13,15 @@
         .green { background-color: #03dac6; box-shadow: 0 0 8px #03dac6; }
         .red { background-color: #cf6679; box-shadow: 0 0 8px #cf6679; }
         label { display: block; font-size: 0.8em; color: #bb86fc; margin-bottom: 5px; font-weight: bold; }
-        input { width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 6px; border: 1px solid #333; background: #2c2c2c; color: white; box-sizing: border-box; }
-        button { width: 100%; padding: 14px; border-radius: 6px; border: none; background: #03dac6; color: #000; font-weight: bold; cursor: pointer; font-size: 1em; }
+        input { width: 100%; padding: 12px; margin-bottom: 5px; border-radius: 6px; border: 1px solid #333; background: #2c2c2c; color: white; box-sizing: border-box; }
+        .input-hint { font-size: 0.75em; color: #888; margin-bottom: 20px; display: block; }
+        .link-hint { color: #03dac6; text-decoration: none; font-weight: bold; }
+        button { width: 100%; padding: 14px; border-radius: 6px; border: none; background: #03dac6; color: #000; font-weight: bold; cursor: pointer; font-size: 1em; margin-top: 10px; }
         #console { background:#000; padding:15px; border-radius:8px; height:250px; overflow-y:auto; border:1px solid #333; font-size:0.85em; color:#00ff00; font-family: monospace; }
-        .btn-outline { display: inline-block; margin-top: 10px; color: #03dac6; border: 1px solid #03dac6; padding: 10px; border-radius: 6px; text-decoration: none; text-align: center; font-size: 0.9em; width: 100%; box-sizing: border-box; font-weight: bold;}
-        .details-title { font-size: 0.75em; font-weight: bold; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-top: 30px; margin-bottom: 15px; }
+        .details-title { font-size: 0.75em; font-weight: bold; color: #bb86fc; text-transform: uppercase; letter-spacing: 1px; margin-top: 30px; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 5px;}
         .info-section { font-size: 0.85em; color: #b0b0b0; line-height: 1.5; margin-bottom: 20px; }
         .flow-step { margin-bottom: 10px; padding-left: 15px; border-left: 2px solid #333; }
+        .path-box { background: #121212; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 0.8em; text-align: center; color: #03dac6; border: 1px dashed #333; }
         hr { border: 0; border-top: 1px solid #333; margin: 30px 0; }
         .footer { margin-top: 25px; font-size: 0.7em; color: #444; text-align: center; }
     </style>
@@ -29,22 +31,13 @@
         {% if dashboard %}
         <h2>Gateway Dashboard</h2>
         <div class="subtitle">System is operational.</div>
-        <div class="status-row">
-            <span>Tailscale Network</span>
-            <span><span class="dot {{ 'green' if online else 'red' }}"></span>{{ 'Connected' if online else 'Offline' }}</span>
-        </div>
-        <div class="status-row">
-            <span>Molly Service</span>
-            <span><span class="dot {{ 'green' if service_active else 'red' }}"></span>{{ 'Active' if service_active else 'Stopped' }}</span>
-        </div>
-        <div style="text-align: center; margin: 20px 0;">
-            <label>Tailscale IP Address</label>
-            <div style="font-size: 1.5em; color: #fff; letter-spacing: 1px;">{{ ip if ip else '---' }}</div>
-        </div>
-        <a href="/download_config" class="btn-outline">📥 DOWNLOAD CONFIG</a>
+        <div class="status-row"><span>Tailscale Network</span><span><span class="dot {{ 'green' if online else 'red' }}"></span>{{ 'Connected' if online else 'Offline' }}</span></div>
+        <div class="status-row"><span>Molly Service</span><span><span class="dot {{ 'green' if service_active else 'red' }}"></span>{{ 'Active' if service_active else 'Stopped' }}</span></div>
+        <div style="text-align: center; margin: 20px 0;"><label>Gateway IP Address</label><div style="font-size: 1.5em; color: #fff;">{{ ip if ip else '---' }}</div></div>
+        <a href="/download_config" style="display:block; text-align:center; color:#03dac6; text-decoration:none; border:1px solid #03dac6; padding:10px; border-radius:6px; font-weight:bold;">📥 DOWNLOAD CONFIG</a>
         <div style="display: flex; gap: 10px; margin-top: 15px;">
-            <button onclick="runSystem('reboot')" style="background: #333; color: #eee; font-size: 0.8em; padding: 10px;">Reboot</button>
-            <button onclick="confirmReset()" style="background: #cf6679; color: #000; font-size: 0.8em; padding: 10px;">Reset</button>
+            <button onclick="runSystem('reboot')" style="background: #333; color: #eee; font-size: 0.8em;">Reboot</button>
+            <button onclick="confirmReset()" style="background: #cf6679; color: #000; font-size: 0.8em;">Reset</button>
         </div>
 
         {% elif activating %}
@@ -58,62 +51,59 @@
         {% else %}
         <h2>Molly-Pi Setup</h2>
         <div class="subtitle">Activate your private notification gateway.</div>
+        
         <form action="/setup" method="post">
             <label>Tailscale Auth Key</label>
             <input type="text" name="ts_key" placeholder="tskey-auth-..." required>
+            <span class="input-hint">Get your key at <a href="https://login.tailscale.com/admin/settings/keys" class="link-hint" target="_blank">Tailscale Admin Console</a></span>
+            
             <label>Gateway Name</label>
             <input type="text" name="device_name" value="molly-pi" required>
+            <span class="input-hint">The name as it will appear in your network.</span>
+            
             <button type="submit">ACTIVATE GATEWAY</button>
         </form>
-        <div style="margin-top: 15px; text-align: center;">
-            <a href="/setup?test=true" style="font-size: 0.7em; color: #444; text-decoration: none;">Launch Test Mode</a>
-        </div>
+
+        <div style="margin-top: 15px; text-align: center;"><a href="/setup?test=true" style="font-size: 0.7em; color: #444; text-decoration: none;">Launch Test Mode</a></div>
         
         <hr>
         
-        <div class="details-title">How it works</div>
+        <div class="details-title">Notification Path</div>
         <div class="info-section">
-            <div class="flow-step">1. This Pi creates an <b>encrypted tunnel</b> to your private network.</div>
-            <div class="flow-step">2. It runs a lightweight <b>UnifiedPush</b> server in a secure container.</div>
-            <div class="flow-step">3. Signal/Molly messages bypass Big Tech and route <b>directly to you</b>.</div>
+            Your messages stay private. This gateway replaces Google Play Services:
+            <div class="path-box" style="margin-top:10px;">
+                Signal Server → Molly-Pi → Your Phone
+            </div>
+            <p style="font-size: 0.8em; color: #888;">Traffic is encrypted via your private Tailscale tunnel.</p>
         </div>
 
-        <div class="details-title">Instructions</div>
+        <div class="details-title">Quick Start Steps</div>
         <div class="info-section">
-            Generate a non-ephemeral key at <a href="https://login.tailscale.com/admin/settings/keys" style="color:#03dac6" target="_blank">Tailscale Admin</a>.
+            <div class="flow-step"><b>1.</b> Enter a non-ephemeral Auth Key above.</div>
+            <div class="flow-step"><b>2.</b> Wait for the green "Online" dashboard.</div>
+            <div class="flow-step"><b>3.</b> Install Molly (Signal) and input the IP.</div>
         </div>
         {% endif %}
         
-        <div class="footer">Molly-Pi Gateway v1.0.0</div>
+        <div class="footer">Molly-Pi Gateway v1.1.0</div>
 
         <script>
             if (document.getElementById('console')) {
                 const eventSource = new EventSource("/stream_logs?key={{key}}&name={{name}}");
                 eventSource.onmessage = function(e) {
+                    const cb = document.getElementById('console');
                     if (e.data === "[DONE]") {
                         eventSource.close();
+                        cb.innerHTML += "<br>[SYSTEM] Finished.";
                         document.getElementById('final-steps').style.display = "block";
-                        const cb = document.getElementById('console');
-                        cb.innerHTML += "<br>[SYSTEM] Setup finished successfully.";
-                        cb.scrollTop = cb.scrollHeight;
                     } else {
-                        const cb = document.getElementById('console');
                         cb.innerHTML += e.data + "<br>";
                         cb.scrollTop = cb.scrollHeight;
                     }
                 };
             }
-            function runSystem(action) {
-                if(confirm("Confirm " + action + "?")) {
-                    fetch('/system/' + action, {method: 'POST'});
-                    alert("Sending command...");
-                }
-            }
-            function confirmReset() {
-                if(confirm("DANGER: This will wipe your configuration. Proceed?")) {
-                    fetch('/system/reset', {method: 'POST'}).then(() => location.href='/');
-                }
-            }
+            function runSystem(action) { if(confirm("Confirm " + action + "?")) { fetch('/system/' + action, {method: 'POST'}); alert("Command sent."); } }
+            function confirmReset() { if(confirm("Reset everything?")) { fetch('/system/reset', {method: 'POST'}).then(() => location.href='/'); } }
         </script>
     </div>
 </body>

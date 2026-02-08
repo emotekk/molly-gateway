@@ -11,6 +11,7 @@ def index():
     if os.path.exists(".env"):
         ip = subprocess.getoutput("tailscale ip -4").strip()
         is_online = bool(ip and ip.startswith("100."))
+        # Check docker status specifically for the molly-socket container
         docker_status = subprocess.getoutput("sudo docker ps --filter 'name=molly-socket' --format '{{.Status}}'").strip()
         is_active = "Up" in docker_status
         return render_template('index.html', dashboard=True, online=is_online, ip=ip, service_active=is_active)
@@ -40,11 +41,12 @@ def stream_logs():
     def generate():
         if is_test:
             yield "data: [TEST] Initializing mock installation...\n\n"
-            time.sleep(1); yield "data: [TEST] Cleaning up old network sessions...\n\n"
-            time.sleep(1); yield f"data: [TEST] Successfully authenticated as {name}\n\n"
-            time.sleep(1); yield "data: [TEST] Molly-Pi services are UP and RUNNING.\n\n"
+            time.sleep(1); yield "data: [TEST] Connecting to Tailscale Mesh...\n\n"
+            time.sleep(1); yield f"data: [TEST] Node authorized as {name}\n\n"
+            time.sleep(1); yield "data: [TEST] Docker Compose: Starting molly-socket...\n\n"
+            time.sleep(1); yield "data: [TEST] Activation complete.\n\n"
         else:
-            yield "data: [SYSTEM] Disconnecting old Tailscale session...\n\n"
+            yield "data: [SYSTEM] Resetting Tailscale state...\n\n"
             subprocess.run(["sudo", "tailscale", "logout"])
             cmd = f"sudo tailscale up --authkey={ts_key} --hostname={name} && sudo docker compose up -d"
             process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
@@ -64,7 +66,7 @@ def get_status():
 @app.route('/download_config')
 def download_config():
     ip = subprocess.getoutput("tailscale ip -4").strip()
-    config_text = f"MOLLY-PI CONFIG\nIP: {ip}\nDATE: {datetime.datetime.now()}"
+    config_text = f"MOLLY-PI CONFIG\n----------------\nIP: {ip}\nDATE: {datetime.datetime.now()}\nSTATUS: ACTIVE"
     return Response(config_text, mimetype="text/plain", headers={"Content-disposition": "attachment; filename=molly_config.txt"})
 
 @app.route('/system/<action>', methods=['POST'])
