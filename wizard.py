@@ -1,14 +1,29 @@
 import os
 import subprocess
 import time
-import sys
+import datetime
 from flask import Flask, request, render_template, Response, jsonify
 
 app = Flask(__name__)
 
 @app.route('/')
 def index():
-    return render_template('index.html', activating=False)
+    # If .env exists, we assume the device is already configured
+    if os.path.exists(".env"):
+        ip = subprocess.getoutput("tailscale ip -4").strip()
+        is_online = bool(ip and ip.startswith("100."))
+        
+        # Check if Docker container is running
+        docker_status = subprocess.getoutput("sudo docker ps --filter 'name=molly-socket' --format '{{.Status}}'").strip()
+        is_active = "Up" in docker_status
+
+        return render_template('index.html', 
+                             dashboard=True, 
+                             online=is_online, 
+                             ip=ip, 
+                             service_active=is_active)
+    
+    return render_template('index.html', activating=False, dashboard=False)
 
 @app.route('/setup', methods=['GET', 'POST'])
 def do_setup():
@@ -55,9 +70,7 @@ def stream_logs():
                 clean_line = line.strip().replace('"', "'")
                 if clean_line:
                     yield f"data: {clean_line}\n\n"
-            
             process.stdout.close()
-
         yield "data: [DONE]\n\n"
 
     return Response(generate(), mimetype='text/event-stream', headers={
@@ -72,12 +85,24 @@ def get_status():
     is_online = bool(ip and ip.startswith("100."))
     return jsonify({"online": is_online, "ip": ip})
 
+@app.route('/download_config')
+def download_config():
+    ip = subprocess.getoutput("tailscale ip -4").strip()
+    config_text = f"MOLLY-PI CONFIG\nIP: {ip}\nDATE: {datetime.datetime.now()}"
+    return Response(config_text, mimetype="text/plain", headers={"Content-disposition": "attachment; filename=molly_config.txt"})
+
 @app.route('/system/<action>', methods=['POST'])
 def system_action(action):
     if action == 'reboot':
         subprocess.Popen(["sudo", "reboot"])
     elif action == 'shutdown':
         subprocess.Popen(["sudo", "poweroff"])
+    elif action == 'reset':
+        # Secret command to wipe config and start over
+        if os.path.exists(".env"):
+            os.remove(".env")
+        subprocess.run(["sudo", "tailscale", "logout"])
+        return jsonify({"status": "reset_complete"})
     return jsonify({"status": "command_sent"})
 
 if __name__ == '__main__':

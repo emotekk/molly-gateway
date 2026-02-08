@@ -2,84 +2,102 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Molly-Pi Setup</title>
+    <title>Molly-Pi Gateway</title>
     <style>
         body { background: #121212; color: #e0e0e0; font-family: sans-serif; display: flex; justify-content: center; padding: 20px; }
         .card { background: #1e1e1e; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); width: 100%; max-width: 420px; }
         h2 { color: #bb86fc; margin-top: 0; margin-bottom: 5px; }
         .subtitle { color: #888; font-size: 0.9em; margin-bottom: 25px; }
+        .status-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #2c2c2c; border-radius: 8px; margin-bottom: 10px; }
+        .dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+        .green { background-color: #03dac6; box-shadow: 0 0 8px #03dac6; }
+        .red { background-color: #cf6679; box-shadow: 0 0 8px #cf6679; }
         label { display: block; font-size: 0.8em; color: #bb86fc; margin-bottom: 5px; font-weight: bold; }
         input { width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 6px; border: 1px solid #333; background: #2c2c2c; color: white; box-sizing: border-box; }
         button { width: 100%; padding: 14px; border-radius: 6px; border: none; background: #03dac6; color: #000; font-weight: bold; cursor: pointer; font-size: 1em; }
-        #console { background:#000; padding:15px; border-radius:8px; height:300px; overflow-y:auto; border:1px solid #333; font-size:0.85em; color:#00ff00; white-space: pre-wrap; font-family: monospace; }
-        .details-title { font-size: 0.75em; font-weight: bold; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-top: 30px; margin-bottom: 15px; }
-        .info-section { font-size: 0.85em; color: #b0b0b0; line-height: 1.5; margin-bottom: 20px; }
-        .flow-step { margin-bottom: 10px; padding-left: 15px; border-left: 2px solid #333; }
-        .instruction-link { color: #03dac6; text-decoration: none; font-weight: bold; }
-        hr { border: 0; border-top: 1px solid #333; margin: 30px 0; }
-        .footer { margin-top: 25px; font-size: 0.7em; color: #444; text-align: center; }
-        #final-steps { display:none; margin-top:20px; padding:15px; background:rgba(3, 218, 198, 0.1); border-radius:8px; border:1px solid #03dac6; }
+        #console { background:#000; padding:15px; border-radius:8px; height:250px; overflow-y:auto; border:1px solid #333; font-size:0.85em; color:#00ff00; font-family: monospace; }
+        .btn-outline { display: inline-block; margin-top: 10px; color: #03dac6; border: 1px solid #03dac6; padding: 10px; border-radius: 6px; text-decoration: none; text-align: center; font-size: 0.9em; width: 100%; box-sizing: border-box; font-weight: bold;}
     </style>
 </head>
 <body>
     <div class="card">
-        {% if not activating %}
+        {% if dashboard %}
+        <h2>Gateway Dashboard</h2>
+        <div class="subtitle">System is operational.</div>
+
+        <div class="status-row">
+            <span>Tailscale Network</span>
+            <span><span class="dot {{ 'green' if online else 'red' }}"></span>{{ 'Connected' if online else 'Offline' }}</span>
+        </div>
+
+        <div class="status-row">
+            <span>Molly Service</span>
+            <span><span class="dot {{ 'green' if service_active else 'red' }}"></span>{{ 'Active' if service_active else 'Stopped' }}</span>
+        </div>
+
+        <div style="text-align: center; margin: 20px 0;">
+            <label>Tailscale IP Address</label>
+            <div style="font-size: 1.5em; color: #fff; letter-spacing: 1px;">{{ ip if ip else '---' }}</div>
+        </div>
+
+        <a href="/download_config" class="btn-outline">📥 DOWNLOAD CONFIG</a>
+        
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button onclick="runSystem('reboot')" style="background: #333; color: #eee; font-size: 0.8em; padding: 10px;">Reboot</button>
+            <button onclick="confirmReset()" style="background: #cf6679; color: #000; font-size: 0.8em; padding: 10px;">Reset Setup</button>
+        </div>
+
+        {% elif activating %}
+        <h2>Activating...</h2>
+        <div id="console">Initializing system logs...<br></div>
+        <div id="final-steps" style="display:none; margin-top: 20px;">
+            <p style="color:#03dac6;"><b>Setup Complete!</b></p>
+            <button onclick="location.href='/'">Go to Dashboard</button>
+        </div>
+
+        {% else %}
         <h2>Molly-Pi Setup</h2>
         <div class="subtitle">Activate your private notification gateway.</div>
         <form action="/setup" method="post">
             <label>Tailscale Auth Key</label>
             <input type="text" name="ts_key" placeholder="tskey-auth-..." required>
             <label>Gateway Name</label>
-            <input type="text" name="device_name" placeholder="e.g. molly-pi" value="molly-pi" required>
+            <input type="text" name="device_name" value="molly-pi" required>
             <button type="submit">ACTIVATE GATEWAY</button>
         </form>
         <div style="margin-top: 15px; text-align: center;">
             <a href="/setup?test=true" style="font-size: 0.7em; color: #444; text-decoration: none;">Launch Test Mode</a>
         </div>
-        <hr>
-        <div class="details-title">Help & Documentation</div>
-        <div class="info-section">
-            <b>Key:</b> Get one at the <a href="https://login.tailscale.com/admin/settings/keys" class="instruction-link" target="_blank">Tailscale Console</a>.
-        </div>
-        {% else %}
-        <h2>Activating...</h2>
-        <div id="console">Initializing system logs...<br></div>
-        <div id="final-steps">
-            <p style="color:#03dac6;"><b>Success! Gateway is Online</b></p>
-            <p>Tailscale IP: <b id="ip-addr" style="color:#fff;"></b></p>
-            <a href="https://login.tailscale.com/admin/machines" target="_blank" style="color:#03dac6; font-size:0.9em;">Open Tailscale Admin</a>
-        </div>
-        <script>
-            const consoleBox = document.getElementById('console');
-            const eventSource = new EventSource("/stream_logs?key={{key}}&name={{name}}");
-            
-            eventSource.onmessage = function(e) {
-                if (e.data === "[DONE]") {
-                    eventSource.close();
-                    consoleBox.innerHTML += "<br>[SYSTEM] Finished.";
-                    checkFinalStatus();
-                } else {
-                    consoleBox.innerHTML += e.data + "<br>";
-                    consoleBox.scrollTop = consoleBox.scrollHeight;
-                }
-            };
-            
-            eventSource.onerror = function() {
-                // If it's a test, sometimes it finishes so fast it triggers an error
-                console.log("Stream ended or interrupted.");
-            };
+        {% endif %}
 
-            async function checkFinalStatus() {
-                const res = await fetch('/status');
-                const data = await res.json();
-                if (data.online) {
-                    document.getElementById('ip-addr').innerText = data.ip;
-                    document.getElementById('final-steps').style.display = "block";
+        <script>
+            if (document.getElementById('console')) {
+                const eventSource = new EventSource("/stream_logs?key={{key}}&name={{name}}");
+                eventSource.onmessage = function(e) {
+                    if (e.data === "[DONE]") {
+                        eventSource.close();
+                        document.getElementById('final-steps').style.display = "block";
+                    } else {
+                        const cb = document.getElementById('console');
+                        cb.innerHTML += e.data + "<br>";
+                        cb.scrollTop = cb.scrollHeight;
+                    }
+                };
+            }
+
+            function runSystem(action) {
+                if(confirm("Confirm " + action + "?")) {
+                    fetch('/system/' + action, {method: 'POST'});
+                    alert("Sending command...");
+                }
+            }
+
+            function confirmReset() {
+                if(confirm("DANGER: This will wipe your configuration and logout from Tailscale. Are you sure?")) {
+                    fetch('/system/reset', {method: 'POST'}).then(() => location.href='/');
                 }
             }
         </script>
-        {% endif %}
-        <div class="footer">Molly-Pi Gateway v1.0.0</div>
     </div>
 </body>
 </html>
