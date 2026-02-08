@@ -1,0 +1,9 @@
+version: '3.8'
+services:
+  molly-socket:
+    image: mollyim/molly-socket:latest
+    container_name: molly-socket
+    restart: always
+    # This pulls the TS_AUTHKEY from the .env file the wizard created
+    env_file: .env
+    network_mode: host
