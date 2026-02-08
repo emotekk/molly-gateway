@@ -8,26 +8,16 @@
         .card { background: #1e1e1e; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); width: 100%; max-width: 420px; }
         h2 { color: #bb86fc; margin-top: 0; margin-bottom: 5px; }
         .subtitle { color: #888; font-size: 0.9em; margin-bottom: 25px; }
-        
-        /* Form Styles */
         label { display: block; font-size: 0.8em; color: #bb86fc; margin-bottom: 5px; font-weight: bold; }
         input { width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 6px; border: 1px solid #333; background: #2c2c2c; color: white; box-sizing: border-box; }
         button { width: 100%; padding: 14px; border-radius: 6px; border: none; background: #03dac6; color: #000; font-weight: bold; cursor: pointer; font-size: 1em; }
-        
-        /* Console Styles */
         #console { background:#000; padding:15px; border-radius:8px; height:300px; overflow-y:auto; border:1px solid #333; font-size:0.85em; color:#00ff00; white-space: pre-wrap; font-family: monospace; }
-        
-        /* Info Section Styles */
         .details-title { font-size: 0.75em; font-weight: bold; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-top: 30px; margin-bottom: 15px; }
         .info-section { font-size: 0.85em; color: #b0b0b0; line-height: 1.5; margin-bottom: 20px; }
-        .info-section b { color: #e0e0e0; }
         .flow-step { margin-bottom: 10px; padding-left: 15px; border-left: 2px solid #333; }
         .instruction-link { color: #03dac6; text-decoration: none; font-weight: bold; }
-        
         hr { border: 0; border-top: 1px solid #333; margin: 30px 0; }
         .footer { margin-top: 25px; font-size: 0.7em; color: #444; text-align: center; }
-        
-        /* Success Box */
         #final-steps { display:none; margin-top:20px; padding:15px; background:rgba(3, 218, 198, 0.1); border-radius:8px; border:1px solid #03dac6; }
     </style>
 </head>
@@ -36,66 +26,47 @@
         {% if not activating %}
         <h2>Molly-Pi Setup</h2>
         <div class="subtitle">Activate your private notification gateway.</div>
-
         <form action="/setup" method="post">
             <label>Tailscale Auth Key</label>
             <input type="text" name="ts_key" placeholder="tskey-auth-..." required>
-            
             <label>Gateway Name</label>
             <input type="text" name="device_name" placeholder="e.g. molly-pi" value="molly-pi" required>
-            <div style="font-size: 0.75em; color: #666; margin-top: -15px; margin-bottom: 20px;">
-                How the device will appear in your Tailscale dashboard.
-            </div>
-            
             <button type="submit">ACTIVATE GATEWAY</button>
         </form>
-
         <div style="margin-top: 15px; text-align: center;">
             <a href="/setup?test=true" style="font-size: 0.7em; color: #444; text-decoration: none;">Launch Test Mode</a>
         </div>
-
         <hr>
-
         <div class="details-title">Help & Documentation</div>
-        
         <div class="info-section">
-            <b>Where do I get a key?</b><br>
-            Generate a key in your <a href="https://login.tailscale.com/admin/settings/keys" class="instruction-link" target="_blank">Tailscale Console</a>. 
-            Ensure "Ephemeral" is off so the gateway stays linked.
+            <b>Key:</b> Get one at the <a href="https://login.tailscale.com/admin/settings/keys" class="instruction-link" target="_blank">Tailscale Console</a>.
         </div>
-
-        <div class="info-section">
-            <b>How it works:</b>
-            <div class="flow-step">1. This Pi joins your private Tailscale network via an encrypted tunnel.</div>
-            <div class="flow-step">2. It acts as a bridge for Molly (Signal fork) to receive push alerts.</div>
-            <div class="flow-step">3. Notifications are sent directly to your phone, bypassing Google/Firebase.</div>
-        </div>
-
         {% else %}
         <h2>Activating...</h2>
         <div id="console">Initializing system logs...<br></div>
-        
         <div id="final-steps">
-            <p style="color:#03dac6; margin-top:0;"><b>Success! Gateway is Online</b></p>
-            <p>Tailscale IP: <b id="ip-addr" style="font-size:1.1em; color:#fff;"></b></p>
-            <p style="font-size:0.8em; color:#888;">Go to Tailscale Admin > Machines and <b>Disable Key Expiry</b> for this device.</p>
-            <a href="https://login.tailscale.com/admin/machines" target="_blank" style="display:inline-block; margin-top:10px; color:#03dac6; font-size:0.9em; text-decoration:none; border:1px solid #03dac6; padding:5px 10px; border-radius:4px;">Open Tailscale Admin</a>
+            <p style="color:#03dac6;"><b>Success! Gateway is Online</b></p>
+            <p>Tailscale IP: <b id="ip-addr" style="color:#fff;"></b></p>
+            <a href="https://login.tailscale.com/admin/machines" target="_blank" style="color:#03dac6; font-size:0.9em;">Open Tailscale Admin</a>
         </div>
-
         <script>
             const consoleBox = document.getElementById('console');
-            // Connect to the log stream
             const eventSource = new EventSource("/stream_logs?key={{key}}&name={{name}}");
             
             eventSource.onmessage = function(e) {
                 if (e.data === "[DONE]") {
                     eventSource.close();
-                    consoleBox.innerHTML += "<br>[SYSTEM] Process finished.";
+                    consoleBox.innerHTML += "<br>[SYSTEM] Finished.";
                     checkFinalStatus();
                 } else {
                     consoleBox.innerHTML += e.data + "<br>";
                     consoleBox.scrollTop = consoleBox.scrollHeight;
                 }
+            };
+            
+            eventSource.onerror = function() {
+                // If it's a test, sometimes it finishes so fast it triggers an error
+                console.log("Stream ended or interrupted.");
             };
 
             async function checkFinalStatus() {
@@ -104,15 +75,11 @@
                 if (data.online) {
                     document.getElementById('ip-addr').innerText = data.ip;
                     document.getElementById('final-steps').style.display = "block";
-                    consoleBox.style.height = "150px"; 
                 }
             }
         </script>
         {% endif %}
-
-        <div class="footer">
-            Molly-Pi Gateway v1.0.0 • Private & Open Source
-        </div>
+        <div class="footer">Molly-Pi Gateway v1.0.0</div>
     </div>
 </body>
 </html>
