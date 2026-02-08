@@ -39,15 +39,20 @@ HTML_TEMPLATE = """
         <h2>Molly-Pi Setup</h2>
         <div class="subtitle">Activate your private notification gateway.</div>
 
+
         <form action="/setup" method="post">
             <label>Tailscale Auth Key</label>
             <input type="text" name="ts_key" placeholder="tskey-auth-..." required>
             
             <label>Gateway Name</label>
             <input type="text" name="device_name" placeholder="e.g. molly-pi" value="molly-pi" required>
+            <div style="font-size: 0.75em; color: #666; margin-top: -15px; margin-bottom: 20px;">
+                This is how the device will appear in your Tailscale dashboard.
+            </div>
             
             <button type="submit">ACTIVATE GATEWAY</button>
         </form>
+
 
         <hr>
 
