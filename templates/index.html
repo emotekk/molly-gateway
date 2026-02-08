@@ -17,6 +17,11 @@
         button { width: 100%; padding: 14px; border-radius: 6px; border: none; background: #03dac6; color: #000; font-weight: bold; cursor: pointer; font-size: 1em; }
         #console { background:#000; padding:15px; border-radius:8px; height:250px; overflow-y:auto; border:1px solid #333; font-size:0.85em; color:#00ff00; font-family: monospace; }
         .btn-outline { display: inline-block; margin-top: 10px; color: #03dac6; border: 1px solid #03dac6; padding: 10px; border-radius: 6px; text-decoration: none; text-align: center; font-size: 0.9em; width: 100%; box-sizing: border-box; font-weight: bold;}
+        .details-title { font-size: 0.75em; font-weight: bold; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-top: 30px; margin-bottom: 15px; }
+        .info-section { font-size: 0.85em; color: #b0b0b0; line-height: 1.5; margin-bottom: 20px; }
+        .flow-step { margin-bottom: 10px; padding-left: 15px; border-left: 2px solid #333; }
+        hr { border: 0; border-top: 1px solid #333; margin: 30px 0; }
+        .footer { margin-top: 25px; font-size: 0.7em; color: #444; text-align: center; }
     </style>
 </head>
 <body>
@@ -24,27 +29,22 @@
         {% if dashboard %}
         <h2>Gateway Dashboard</h2>
         <div class="subtitle">System is operational.</div>
-
         <div class="status-row">
             <span>Tailscale Network</span>
             <span><span class="dot {{ 'green' if online else 'red' }}"></span>{{ 'Connected' if online else 'Offline' }}</span>
         </div>
-
         <div class="status-row">
             <span>Molly Service</span>
             <span><span class="dot {{ 'green' if service_active else 'red' }}"></span>{{ 'Active' if service_active else 'Stopped' }}</span>
         </div>
-
         <div style="text-align: center; margin: 20px 0;">
             <label>Tailscale IP Address</label>
             <div style="font-size: 1.5em; color: #fff; letter-spacing: 1px;">{{ ip if ip else '---' }}</div>
         </div>
-
         <a href="/download_config" class="btn-outline">📥 DOWNLOAD CONFIG</a>
-        
         <div style="display: flex; gap: 10px; margin-top: 15px;">
             <button onclick="runSystem('reboot')" style="background: #333; color: #eee; font-size: 0.8em; padding: 10px;">Reboot</button>
-            <button onclick="confirmReset()" style="background: #cf6679; color: #000; font-size: 0.8em; padding: 10px;">Reset Setup</button>
+            <button onclick="confirmReset()" style="background: #cf6679; color: #000; font-size: 0.8em; padding: 10px;">Reset</button>
         </div>
 
         {% elif activating %}
@@ -68,7 +68,23 @@
         <div style="margin-top: 15px; text-align: center;">
             <a href="/setup?test=true" style="font-size: 0.7em; color: #444; text-decoration: none;">Launch Test Mode</a>
         </div>
+        
+        <hr>
+        
+        <div class="details-title">How it works</div>
+        <div class="info-section">
+            <div class="flow-step">1. This Pi creates an <b>encrypted tunnel</b> to your private network.</div>
+            <div class="flow-step">2. It runs a lightweight <b>UnifiedPush</b> server in a secure container.</div>
+            <div class="flow-step">3. Signal/Molly messages bypass Big Tech and route <b>directly to you</b>.</div>
+        </div>
+
+        <div class="details-title">Instructions</div>
+        <div class="info-section">
+            Generate a non-ephemeral key at <a href="https://login.tailscale.com/admin/settings/keys" style="color:#03dac6" target="_blank">Tailscale Admin</a>.
+        </div>
         {% endif %}
+        
+        <div class="footer">Molly-Pi Gateway v1.0.0</div>
 
         <script>
             if (document.getElementById('console')) {
@@ -77,6 +93,9 @@
                     if (e.data === "[DONE]") {
                         eventSource.close();
                         document.getElementById('final-steps').style.display = "block";
+                        const cb = document.getElementById('console');
+                        cb.innerHTML += "<br>[SYSTEM] Setup finished successfully.";
+                        cb.scrollTop = cb.scrollHeight;
                     } else {
                         const cb = document.getElementById('console');
                         cb.innerHTML += e.data + "<br>";
@@ -84,16 +103,14 @@
                     }
                 };
             }
-
             function runSystem(action) {
                 if(confirm("Confirm " + action + "?")) {
                     fetch('/system/' + action, {method: 'POST'});
                     alert("Sending command...");
                 }
             }
-
             function confirmReset() {
-                if(confirm("DANGER: This will wipe your configuration and logout from Tailscale. Are you sure?")) {
+                if(confirm("DANGER: This will wipe your configuration. Proceed?")) {
                     fetch('/system/reset', {method: 'POST'}).then(() => location.href='/');
                 }
             }
