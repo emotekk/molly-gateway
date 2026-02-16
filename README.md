@@ -42,8 +42,8 @@ Molly Gateway is a self-hosted notification server that:
 Signal → Your Pi → Tailscale → Your Phone → Notification 🔔
 ```
 
-- **At home:** Direct local connection (fast)
-- **Away:** Encrypted Tailscale tunnel (secure)
+- **At Home:** Tailscale uses direct peer-to-peer over WiFi (fast!)  
+- **Away:** Tailscale routes through encrypted relay servers (secure!)
 - **Always:** Private - your data, your hardware
 
 ---
@@ -70,7 +70,7 @@ Signal → Your Pi → Tailscale → Your Phone → Notification 🔔
 
 ```bash
 # 1. Download and run setup
-git clone https://github.com/yourusername/molly-gateway.git
+git clone https://github.com/emotekk/molly-gateway.git
 cd molly-gateway
 chmod +x setup.sh
 sudo ./setup.sh
