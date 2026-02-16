@@ -1,15 +1,14 @@
 [Unit]
-Description=Molly-Pi Setup Wizard
-After=network.target
+Description=Molly Gateway Wizard
+After=network.target tailscaled.service
 
 [Service]
-# This path must match exactly where you put the files on the Pi
-ExecStart=/usr/bin/python3 /home/pi/molly-gateway/wizard.py
-WorkingDirectory=/home/pi/molly-gateway
-StandardOutput=inherit
-StandardError=inherit
-Restart=always
+Type=simple
 User=root
+WorkingDirectory=/home/pi/molly-gateway
+ExecStart=/usr/bin/python3 /home/pi/molly-gateway/wizard.py
+Restart=always
+Environment=PYTHONUNBUFFERED=1
 
-[Install]
+[Install] 
 WantedBy=multi-user.target

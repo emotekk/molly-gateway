@@ -1,67 +1,43 @@
 #!/bin/bash
 
-# Ensure we are in the project directory
+# Ensure we are in the project directory 
 cd "$(dirname "$0")"
 PROJECT_DIR=$(pwd)
 
-echo "[INFO] Updating system..."
+echo "[INFO] Updating system and installing dependencies..."
 sudo apt-get update && sudo apt-get upgrade -y
+sudo apt-get install -y python3-pip python3-flask curl docker.io docker-compose tailscale
 
-echo "[INFO] Installing Python dependencies..."
-sudo apt-get install -y python3-pip python3-flask curl
+# Create templates directory if it doesn't exist
+mkdir -p templates
 
-# 1. Install Tailscale
-if ! command -v tailscale &> /dev/null; then
-    echo "[INFO] Installing Tailscale..."
-    curl -fsSL https://tailscale.com/install.sh | sh
-    sudo systemctl enable --now tailscaled
-else
-    echo "[INFO] Tailscale already installed."
-fi
+# 1. Optimize Network stack
+echo "[INFO] Configuring network interfaces..."
+sudo sysctl -w net.ipv4.ip_forward=1
+sudo iptables -P FORWARD ACCEPT
+sudo iptables -I INPUT -i tailscale0 -j ACCEPT
 
-# 2. Install Docker & Docker Compose
-echo "[INFO] Installing Docker..."
-sudo apt-get install -y docker.io
-
-# Attempt to install Docker Compose through various package names
-echo "[INFO] Installing Docker Compose..."
-sudo apt-get install -y docker-compose-plugin || sudo apt-get install -y docker-compose || sudo pip3 install docker-compose
-
-# 3. Setup the Auto-Start Service
-# This checks for the filename you chose: molly-wizard.service
+# 2. Setup Systemd Service
 SERVICE_FILE="molly-wizard.service"
 
 if [ -f "$SERVICE_FILE" ]; then
-    echo "[INFO] Configuring $SERVICE_FILE to start on boot..."
+    echo "[INFO] Registering $SERVICE_FILE..."
+    # Replace template paths with absolute paths
+    sudo sed -i "s|WorkingDirectory=.*|WorkingDirectory=$PROJECT_DIR|g" "$SERVICE_FILE"
+    sudo sed -i "s|ExecStart=.*|ExecStart=/usr/bin/python3 $PROJECT_DIR/wizard.py|g" "$SERVICE_FILE"
+
     sudo cp "$SERVICE_FILE" /etc/systemd/system/
     sudo systemctl daemon-reload
     sudo systemctl enable "$SERVICE_FILE"
     sudo systemctl start "$SERVICE_FILE"
 else
-    echo "[ERROR] $SERVICE_FILE NOT FOUND in $PROJECT_DIR"
-    echo "Please check your filename and try again."
+    echo "[ERROR] $SERVICE_FILE not found."
     exit 1
 fi
 
-# 4. Provide the Web Configuration URL
+# 3. Output access info
 IP_ADDR=$(hostname -I | awk '{print $1}')
 echo "------------------------------------------------------"
-echo "SETUP WIZARD IS LIVE"
-echo "Please open your browser and go to:"
-echo "URL 1: http://$IP_ADDR"
-echo "URL 2: http://$(hostname).local"
+echo "INSTALLATION COMPLETE"
+echo "Open your browser to: http://$IP_ADDR"
 echo "------------------------------------------------------"
-
-# 5. Wait for the .env file to be created by the Wizard
-echo "[INFO] Waiting for web configuration to complete..."
-while [ ! -f .env ]
-do
-  sleep 5
-done
-
-# 6. Bring up the Docker Stack
-echo "[INFO] Credentials received. Starting services..."
-# Support both 'docker compose' (v2) and 'docker-compose' (v1)
-sudo docker compose up -d || sudo docker-compose up -d
-
-echo "[SUCCESS] Gateway is now running!"

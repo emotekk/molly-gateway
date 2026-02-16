@@ -1,54 +1,171 @@
-🚀 Molly-Pi Gateway
+# 🛡️ Molly Gateway
 
-Molly-Pi is a "plug-and-play" notification bridge designed for privacy-conscious users running Molly (the hardened Signal fork) on de-Googled Android devices.
+**Private push notifications for de-Googled Android devices**
 
-The goal of this project is to provide a reliable, battery-efficient alternative to Google's Firebase Cloud Messaging (FCM). By hosting your own gateway, you get instant notifications via UnifiedPush without needing Google Play Services or constant background battery drain.
-✨ Features
+A plug-and-play notification bridge for [Molly](https://molly.im/) (hardened Signal fork) that works without Google Play Services. Run on a Raspberry Pi or any Linux server to receive Signal notifications privately through your own infrastructure.
 
-    Mobile-Friendly Setup: A clean web-based wizard to configure your gateway from your phone.
+---
 
-    Tailscale Integrated: Secure, "zero-config" networking. Access your gateway on 5G without opening router ports.
+## 🎯 What Is This?
 
-    Hardware Agnostic: Optimized for Raspberry Pi 3/4/5 and Zero 2W, but runs on any Linux PC via Docker.
+Molly Gateway is a self-hosted notification server that:
+- ✅ Enables push notifications for Molly without Google Play Services
+- ✅ Works on de-Googled Android (GrapheneOS, CalyxOS, LineageOS, etc.)
+- ✅ Routes notifications through your own hardware (Raspberry Pi, VPS, etc.)
+- ✅ Uses Tailscale for secure remote access
+- ✅ Zero cloud dependencies after setup
+- ✅ Fully private - your data never touches third-party servers
 
-    Headless Operation: Designed to run without a monitor or keyboard—just plug into your router and go.
+---
 
-🛠️ The Stack
+## 🏗️ Architecture
 
-    MollySocket: The core bridge between Signal and UnifiedPush.
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    How It Works                              │
+├─────────────────────────────────────────────────────────────┤
+│                                                               │
+│  Signal Server                                                │
+│       ↓                                                       │
+│  Your Gateway (Raspberry Pi)                                 │
+│       ↓                                                       │
+│  Tailscale Network (always required)                         │
+│       ↓                                                       │
+│  Your Phone (Molly app + Tailscale)                          │
+│       ↓                                                       │
+│  You get notified! 🔔                                        │
+│                                                               │
+└─────────────────────────────────────────────────────────────┘
+```
 
-    Nginx Proxy Manager: Handles SSL and local routing.
+```
+Signal → Your Pi → Tailscale → Your Phone → Notification 🔔
+```
 
-    Tailscale: Provides a secure tunnel to your phone.
+- **At home:** Direct local connection (fast)
+- **Away:** Encrypted Tailscale tunnel (secure)
+- **Always:** Private - your data, your hardware
 
-    Docker: Ensures the services are isolated and easy to update.
+---
 
-📥 Installation
-Method 1: The "Appliance" Way (Recommended for Pi users)
+**Important:** Tailscale must stay enabled on your phone at all times, but it's smart enough to use direct local connections when you're at home for maximum speed with minimal battery drain.
 
-Coming Soon: Pre-baked SD Card Images!
-Method 2: The Scripted Install (For any Debian/Ubuntu system)
+---
 
-    Install a clean version of Raspberry Pi OS Lite (64-bit) or any Debian-based Linux.
+## ⚡ Quick Start
 
-    Clone this repository: git clone https://github.com/emotekk/molly-gateway.git cd molly-gateway
+### What You Need
+- Raspberry Pi (3B or newer)
+- [Tailscale account](https://tailscale.com/) (free)
+- Molly app on Android
 
-    Run the setup script: chmod +x setup.sh ./setup.sh
+### 📦 What Gets Installed
 
-⚙️ Configuration
+- **Docker & Docker Compose** - Runs MollySocket container
+- **Tailscale** - Creates secure VPN tunnel
+- **Python + Flask** - Powers web setup wizard
+- **MollySocket** - Handles push notifications
 
-Once the script is running:
+### Installation (10 minutes)
 
-    Open your phone's browser and go to http://molly-pi.local (or the IP address of your device).
+```bash
+# 1. Download and run setup
+git clone https://github.com/yourusername/molly-gateway.git
+cd molly-gateway
+chmod +x setup.sh
+sudo ./setup.sh
 
-    Enter your Tailscale Auth Key (found in your Tailscale Admin Console).
+# 2. Open browser to your Pi's IP (shown after setup)
+# 3. Enter Tailscale auth key from https://login.tailscale.com/admin/settings/keys
+# 4. Wait 2-3 minutes for deployment
+# 5. Done!
+```
+All dependencies (Docker, Tailscale, Python) are installed automatically.
 
-    Choose a Device Name.
 
-    Click Activate.
+### Connect Your Phone
 
-Your gateway will automatically start the Docker services. You can then link your Molly app to the gateway using the UnifiedPush settings in the app.
+1. Install Tailscale on your Android phone
+2. Log in with same Tailscale account
+3. Keep Tailscale running
+4. Open Molly → Settings → Notifications → UnifiedPush → Register
+5. Enter gateway URL from dashboard
+6. Scan QR code
+7. ✅ Notifications working!
 
-📄 License
+---
 
-This project is licensed under the MIT License.
+
+
+## 🔧 Management
+
+### View Dashboard
+```bash
+# Open browser to:
+http://<your-pi-ip>
+```
+
+### View Logs
+```bash
+sudo docker logs molly-socket
+```
+
+### Restart Gateway
+```bash
+sudo docker-compose restart
+```
+
+### Complete Reset
+```bash
+sudo docker-compose down
+rm .env
+rm -rf data
+sudo systemctl restart molly-wizard.service
+```
+
+---
+
+## ❓ Common Issues
+
+### "VAPID Key not found" error
+```bash
+# Delete config and run setup again
+sudo docker-compose down
+rm .env
+sudo systemctl restart molly-wizard.service
+```
+
+### Can't access from phone
+- ✅ Is Tailscale running on phone?
+- ✅ Same Tailscale account on Pi and phone?
+- ✅ Gateway container running? `sudo docker ps`
+
+### Notifications not working
+- Check Molly → Settings → Notifications → UnifiedPush shows "Registered"
+- Disable battery optimization for Molly and Tailscale
+- View gateway logs: `sudo docker logs -f molly-socket`
+
+---
+
+## 🔐 Security
+
+- ✅ Signal messages remain end-to-end encrypted
+- ✅ Tailscale provides encrypted tunnel
+- ✅ VAPID keys never leave your Pi
+- ✅ No third-party cloud services
+
+---
+
+## 📝 License
+
+This project is licensed under the MIT License - see [LICENSE](LICENSE) file for details.
+
+**Built with:**
+- [MollySocket](https://github.com/mollyim/mollysocket) - Notification engine
+- [Molly](https://molly.im/) - Hardened Signal fork
+- [Tailscale](https://tailscale.com/) - Zero-config VPN
+
+
+---
+
+*Made with ❤️ for the privacy community*

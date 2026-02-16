@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Molly Gateway Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+            background: linear-gradient(135deg, #0f111a 0%, #1a1c2e 100%);
+            color: #e0e0e0; 
+            display: flex; 
+            justify-content: center; 
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container { 
+            background: #1a1c2e; 
+            padding: 40px; 
+            border-radius: 16px; 
+            width: 100%; 
+            max-width: 750px; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        
+        .status-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 2px solid #2d314d; 
+            padding-bottom: 20px; 
+            margin-bottom: 30px;
+        }
+        h1 {
+            font-size: 28px;
+            color: #fff;
+        }
+        .status-tag { 
+            padding: 8px 20px; 
+            border-radius: 20px; 
+            font-weight: bold; 
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .running { 
+            background: #00c853; 
+            color: white;
+            animation: pulse 2s infinite;
+        }
+        .offline { 
+            background: #ff5252; 
+            color: white; 
+        }
+        .starting {
+            background: #ff9800;
+            color: white;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .info-section {
+            background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            color: white;
+        }
+        .info-section h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        .info-section h2::before {
+            content: "📱";
+            margin-right: 10px;
+            font-size: 24px;
+        }
+        .info-section p {
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            opacity: 0.95;
+        }
+        
+        .connection-box {
+            background: rgba(255,255,255,0.15);
+            padding: 20px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            margin-bottom: 15px;
+        }
+        .connection-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.8;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+        .connection-label::before {
+            content: "🌐";
+            margin-right: 6px;
+        }
+        .connection-url {
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            font-weight: bold;
+            word-break: break-all;
+            background: rgba(0,0,0,0.3);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+        }
+        .url-hint {
+            font-size: 12px;
+            opacity: 0.85;
+            line-height: 1.5;
+        }
+        
+        .link-button {
+            display: block;
+            text-align: center;
+            padding: 14px;
+            background: white;
+            color: #4f46e5;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 15px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .link-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255,255,255,0.3);
+        }
+        
+        .info-banner {
+            background: #1f2937;
+            border-left: 4px solid #3b82f6;
+            padding: 18px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .info-banner.important {
+            background: #2d1f1a;
+            border-left-color: #ff9800;
+        }
+        .info-banner strong {
+            color: #60a5fa;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .info-banner.important strong {
+            color: #ffb74d;
+        }
+        
+        .steps-guide {
+            background: #252841;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border-left: 4px solid #00c853;
+        }
+        .steps-guide h3 {
+            color: #fff;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        .steps-guide ol {
+            margin-left: 20px;
+        }
+        .steps-guide li {
+            font-size: 14px;
+            line-height: 1.8;
+            color: #b0b3c8;
+            margin-bottom: 10px;
+        }
+        .steps-guide code {
+            background: #0f111a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #00ff00;
+        }
+        .steps-guide strong {
+            color: #818cf8;
+        }
+        
+        .local-access {
+            background: #252841;
+            padding: 18px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4f46e5;
+        }
+        .local-access h4 {
+            color: #818cf8;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .local-access p {
+            font-size: 13px;
+            color: #b0b3c8;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+        .local-access code {
+            background: #0f111a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #818cf8;
+            font-size: 12px;
+        }
+        
+        .action-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px; 
+            margin-bottom: 25px;
+        }
+        .btn { 
+            padding: 14px; 
+            border-radius: 8px; 
+            text-decoration: none; 
+            font-weight: bold; 
+            text-align: center; 
+            border: none; 
+            cursor: pointer; 
+            font-size: 14px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+        }
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .btn-outline { 
+            border: 2px solid #4f46e5; 
+            color: #818cf8; 
+            background: transparent; 
+        }
+        .btn-outline:hover:not(:disabled) {
+            background: rgba(79, 70, 229, 0.1);
+        }
+        .btn-danger { 
+            background: transparent; 
+            color: #ff5252; 
+            border: 2px solid #ff5252; 
+        }
+        .btn-danger:hover:not(:disabled) {
+            background: rgba(255, 82, 82, 0.1);
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        
+        #log-area { 
+            background: #000; 
+            color: #00ff00; 
+            font-family: 'Courier New', monospace; 
+            font-size: 11px; 
+            padding: 20px; 
+            border-radius: 8px; 
+            height: 250px; 
+            overflow-y: auto; 
+            margin-top: 20px; 
+            display: none;
+            border: 2px solid #2d314d;
+        }
+        #log-area.active {
+            display: block;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #2d314d;
+            font-size: 13px;
+            color: #666;
+        }
+        
+        @media (max-width: 600px) {
+            .container { padding: 25px; }
+            h1 { font-size: 24px; }
+            .action-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="status-header">
+            <h1>🛡️ Gateway Dashboard</h1>
+            <div id="statusTag" class="status-tag starting">Checking...</div>
+        </div>
+
+        <div class="info-section">
+            <h2>Gateway URL</h2>
+            <p>Your gateway is ready! Use this URL in your Molly app to receive private push notifications.</p>
+            
+            <div class="connection-box">
+                <div class="connection-label">Tailscale Gateway URL</div>
+                <div class="connection-url" id="gatewayUrl">Loading...</div>
+                <div class="url-hint">✅ Works from anywhere • Encrypted • Always accessible</div>
+            </div>
+            
+            <a id="link" href="#" target="_blank" class="link-button">📱 Open QR Code Page on Phone</a>
+        </div>
+
+        <div class="info-banner important">
+            <strong>⚠️ Important: Keep Tailscale Running on Your Phone</strong>
+            For this gateway to work, Tailscale must stay enabled on your phone at all times. Don't worry about battery drain - when you're at home, Tailscale automatically uses direct local connections for maximum efficiency!
+        </div>
+
+        <div class="local-access">
+            <h4>📍 Testing from Local Network (Optional)</h4>
+            <p>You can also access the gateway directly from devices on your home WiFi using:</p>
+            <p><code id="localUrl">http://loading...</code></p>
+            <p style="margin-top: 8px; font-size: 12px; font-style: italic; color: #888;">Note: This only works on your local network. Your phone must use the Tailscale URL above.</p>
+        </div>
+
+        <div class="steps-guide">
+            <h3>📋 How to Connect Your Phone</h3>
+            <ol>
+                <li><strong>Install Tailscale</strong> on your phone from Play Store / F-Droid</li>
+                <li><strong>Log in to Tailscale</strong> with the same account as your Pi</li>
+                <li><strong>Keep Tailscale enabled</strong> - it will stay on even when phone restarts</li>
+                <li><strong>Open Molly</strong> → Settings → Notifications → <code>UnifiedPush</code></li>
+                <li>Tap <strong>"Register"</strong> and paste the <strong>Tailscale URL</strong> from above</li>
+                <li>Scan the QR code that appears</li>
+                <li>✅ Done! You'll receive notifications at home and away</li>
+            </ol>
+        </div>
+
+        <div class="info-banner">
+            <strong>💡 How It Works at Home</strong>
+            When your phone is on the same WiFi as your Pi, Tailscale intelligently creates a direct peer-to-peer connection. This means your notifications still route through your local network for speed, even though you're using the Tailscale URL. No internet relay needed!
+        </div>
+
+        <h3 style="color: #fff; margin-bottom: 15px; font-size: 18px;">🛠️ Management Tools</h3>
+        <div class="action-grid">
+            <button onclick="fetchLogs()" class="btn btn-outline">📋 View Live Logs</button>
+            <a href="/download-config" class="btn btn-outline">💾 Download Config</a>
+            <button id="resetBtn" onclick="resetGateway()" class="btn btn-danger" style="grid-column: 1 / -1;">🗑️ Reset Gateway</button>
+        </div>
+
+        <div id="log-area"></div>
+        
+        <div class="footer">
+            Molly Gateway • Private Push Notifications<br>
+            <span id="networkInfo"></span>
+        </div>
+    </div>
+
+    <script>
+        let networkData = {};
+        
+        // Update Status and Network Info
+        function updateStatus() {
+            fetch('/health').then(r => r.json()).then(data => {
+                networkData = data;
+                const tag = document.getElementById('statusTag');
+                const status = data.status || 'unknown';
+                
+                tag.innerText = status.toUpperCase();
+                tag.className = "status-tag";
+                
+                if (status === 'running') {
+                    tag.classList.add('running');
+                } else if (status === 'starting' || status === 'restarting') {
+                    tag.classList.add('starting');
+                } else {
+                    tag.classList.add('offline');
+                }
+                
+                // Update Tailscale URL
+                const tailscaleIp = data.tailscale_ip;
+                if (tailscaleIp && tailscaleIp !== 'unknown') {
+                    const url = `http://${tailscaleIp}:8080`;
+                    document.getElementById('gatewayUrl').textContent = url;
+                    document.getElementById('link').href = url;
+                } else {
+                    document.getElementById('gatewayUrl').textContent = 'Waiting for Tailscale...';
+                    document.getElementById('link').href = '#';
+                    document.getElementById('link').onclick = (e) => {
+                        e.preventDefault();
+                        alert('Tailscale is still connecting. Please wait a moment and refresh.');
+                    };
+                }
+                
+                // Update local URL for reference
+                const localIp = data.local_ip;
+                const hostname = data.hostname;
+                if (hostname && hostname !== 'unknown') {
+                    document.getElementById('localUrl').textContent = `http://${hostname}.local:8080`;
+                } else if (localIp && localIp !== 'unknown') {
+                    document.getElementById('localUrl').textContent = `http://${localIp}:8080`;
+                } else {
+                    document.getElementById('localUrl').textContent = 'Not available';
+                }
+                
+                // Network info footer
+                let infoText = [];
+                if (localIp !== 'unknown') infoText.push(`Local: ${localIp}`);
+                if (tailscaleIp !== 'unknown') infoText.push(`Tailscale: ${tailscaleIp}`);
+                if (hostname !== 'unknown') infoText.push(`Hostname: ${hostname}`);
+                document.getElementById('networkInfo').textContent = infoText.join(' • ');
+                
+            }).catch(err => {
+                console.error('Health check failed:', err);
+                document.getElementById('statusTag').innerText = 'ERROR';
+                document.getElementById('statusTag').className = 'status-tag offline';
+            });
+        }
+        
+        // Initial load
+        updateStatus();
+        
+        // Refresh status every 10 seconds
+        setInterval(updateStatus, 10000);
+
+        function fetchLogs() {
+            const area = document.getElementById('log-area');
+            area.classList.add('active');
+            area.innerText = "Fetching logs...\n";
+            fetch('/logs').then(r => r.text()).then(text => {
+                area.innerText = text || "No logs available yet.\n";
+                area.scrollTop = area.scrollHeight;
+            }).catch(err => {
+                area.innerText = `Error fetching logs: ${err.message}\n`;
+            });
+        }
+
+        function resetGateway() {
+            if(confirm("⚠️ Are you sure?\n\nThis will:\n• Stop the gateway\n• Delete your configuration\n• Remove all data\n\nYou'll need to set up again from scratch.")) {
+                const btn = document.getElementById('resetBtn');
+                const originalText = btn.innerHTML;
+                
+                // Show loading state
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner"></span>Resetting...';
+                
+                fetch('/reset-gateway', { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            btn.innerHTML = '<span class="spinner"></span>Success! Reloading...';
+                            setTimeout(() => location.reload(), 2000);
+                        } else {
+                            throw new Error(data.message || 'Reset failed');
+                        }
+                    })
+                    .catch(err => {
+                        alert('Reset failed: ' + err.message);
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                    });
+            }
+        }
+    </script>
+</body>
+</html>
