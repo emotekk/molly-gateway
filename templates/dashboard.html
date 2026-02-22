@@ -448,37 +448,90 @@
         
         // Copy URL to clipboard
         function copyUrl(element, type) {
+            console.log('copyUrl called with type:', type);
             const urlElement = type === 'local' ? document.getElementById('localGatewayUrl') : document.getElementById('gatewayUrl');
             const urlText = urlElement.textContent;
+            console.log('URL to copy:', urlText);
             
             if (urlText === 'Loading...' || urlText === 'Waiting for Tailscale...' || urlText === 'Not available') {
                 alert('URL not ready yet. Please wait a moment.');
                 return;
             }
             
-            navigator.clipboard.writeText(urlText).then(() => {
-                const btn = element.tagName === 'BUTTON' ? element : element.parentElement.querySelector('button');
+            // Try modern clipboard API first
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(urlText).then(() => {
+                    console.log('Copied successfully with clipboard API');
+                    updateButtonFeedback(element);
+                }).catch(err => {
+                    console.error('Clipboard API failed:', err);
+                    fallbackCopy(urlText, element);
+                });
+            } else {
+                console.log('Clipboard API not available, using fallback');
+                fallbackCopy(urlText, element);
+            }
+        }
+        
+        // Update button to show success feedback
+        function updateButtonFeedback(element) {
+            // Find the button - if element is the button, use it; otherwise find the button in the same connection-box
+            let btn;
+            if (element.tagName === 'BUTTON') {
+                btn = element;
+            } else {
+                // Element is the div, find the button in the same parent container
+                const container = element.closest('.connection-box');
+                btn = container ? container.querySelector('button') : null;
+            }
+            
+            if (btn) {
                 const originalText = btn.textContent;
+                const originalBg = btn.style.background;
+                const originalBorder = btn.style.borderColor;
+                const originalColor = btn.style.color;
+                
                 btn.textContent = '✅ Copied!';
                 btn.style.background = '#00c853';
                 btn.style.borderColor = '#00c853';
                 btn.style.color = 'white';
+                
                 setTimeout(() => {
                     btn.textContent = originalText;
-                    btn.style.background = '';
-                    btn.style.borderColor = '';
-                    btn.style.color = '';
+                    btn.style.background = originalBg;
+                    btn.style.borderColor = originalBorder;
+                    btn.style.color = originalColor;
                 }, 2000);
-            }).catch(err => {
-                // Fallback for older browsers
-                const textArea = document.createElement('textarea');
-                textArea.value = urlText;
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-                alert('URL copied to clipboard!');
-            });
+            }
+        }
+        
+        // Fallback copy method for older browsers
+        function fallbackCopy(text, element) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.top = '0';
+            textArea.style.left = '0';
+            textArea.style.opacity = '0';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    console.log('Fallback copy successful');
+                    updateButtonFeedback(element);
+                } else {
+                    console.error('Fallback copy failed');
+                    alert('Failed to copy. Please copy manually: ' + text);
+                }
+            } catch (err) {
+                console.error('Fallback copy error:', err);
+                alert('Failed to copy. Please copy manually: ' + text);
+            }
+            
+            document.body.removeChild(textArea);
         }
         
         // Generate QR code
@@ -552,22 +605,11 @@
                     document.getElementById('localGatewayUrl').textContent = 'Not available';
                 }
                 
-                // Update local URL for reference
-                const localIp = data.local_ip;
-                const hostname = data.hostname;
-                if (hostname && hostname !== 'unknown') {
-                    document.getElementById('localUrl').textContent = `http://${hostname}.local:8080`;
-                } else if (localIp && localIp !== 'unknown') {
-                    document.getElementById('localUrl').textContent = `http://${localIp}:8080`;
-                } else {
-                    document.getElementById('localUrl').textContent = 'Not available';
-                }
-                
                 // Network info footer
                 let infoText = [];
-                if (localIp !== 'unknown') infoText.push(`Local: ${localIp}`);
-                if (tailscaleIp !== 'unknown') infoText.push(`Tailscale: ${tailscaleIp}`);
-                if (hostname !== 'unknown') infoText.push(`Hostname: ${hostname}`);
+                if (localIp && localIp !== 'unknown') infoText.push(`Local: ${localIp}`);
+                if (tailscaleIp && tailscaleIp !== 'unknown') infoText.push(`Tailscale: ${tailscaleIp}`);
+                if (hostname && hostname !== 'unknown') infoText.push(`Hostname: ${hostname}`);
                 document.getElementById('networkInfo').textContent = infoText.join(' • ');
                 
             }).catch(err => {
@@ -578,7 +620,7 @@
         }
         
         // Initial load
-        updateStatus(); 
+        updateStatus();
         
         // Refresh status every 10 seconds
         setInterval(updateStatus, 10000);
