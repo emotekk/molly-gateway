@@ -139,10 +139,35 @@
             font-weight: bold;
             font-size: 15px;
             transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
         }
         .link-button:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 20px rgba(255,255,255,0.3);
+        }
+        .link-button.secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-size: 13px;
+        }
+        
+        .mobile-notice {
+            background: #2d1f1a;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            line-height: 1.6;
+            display: none;
+        }
+        .mobile-notice.show {
+            display: block;
+        }
+        .mobile-notice strong {
+            color: #ffb74d;
+            display: block;
+            margin-bottom: 8px;
         }
         
         .info-banner {
@@ -197,6 +222,12 @@
         }
         .steps-guide strong {
             color: #818cf8;
+        }
+        .steps-guide.mobile {
+            display: none;
+        }
+        .steps-guide.desktop {
+            display: block;
         }
         
         .local-access {
@@ -321,16 +352,49 @@
         </div>
 
         <div class="info-section">
-            <h2>Gateway URL</h2>
-            <p>Your gateway is ready! Use this URL in your Molly app to receive private push notifications.</p>
+            <h2>Register Your Phone</h2>
+            <p>Choose any method below to connect your Molly app. All methods register the same gateway.</p>
             
+            <!-- Method 1: QR Code -->
             <div class="connection-box">
-                <div class="connection-label">Tailscale Gateway URL</div>
-                <div class="connection-url" id="gatewayUrl">Loading...</div>
-                <div class="url-hint">✅ Works from anywhere • Encrypted • Always accessible</div>
+                <div class="connection-label">Method 1: Scan QR Code (Recommended)</div>
+                <div style="text-align: center; padding: 20px; background: white; border-radius: 8px; margin-bottom: 12px;">
+                    <div id="qrcode" style="display: inline-block;"></div>
+                </div>
+                <div class="url-hint">📸 Open Molly → Settings → Notifications → UnifiedPush → Scan QR code</div>
             </div>
-            
-            <a id="link" href="#" target="_blank" class="link-button">📱 Open QR Code Page on Phone</a>
+
+            <!-- Method 2: Direct Link (Mobile) -->
+            <div class="connection-box">
+                <div class="connection-label">Method 2: Direct Link</div>
+                <a id="directLink" href="#" target="_blank" class="link-button">📱 Open Gateway in Browser</a>
+                <div class="url-hint" style="margin-top: 12px;">Tap the button above, then copy the URL and paste it in Molly → Settings → Notifications → UnifiedPush → Register</div>
+            </div>
+
+            <!-- Method 3: Copy URL Text -->
+            <div class="connection-box">
+                <div class="connection-label">Method 3: Copy Tailscale URL Manually</div>
+                <div class="connection-url" id="gatewayUrl" style="cursor: pointer; user-select: all;" onclick="copyUrl(this, 'tailscale')" title="Click to copy">
+                    Loading...
+                </div>
+                <button onclick="copyUrl(this, 'tailscale')" class="link-button secondary" style="margin-top: 10px;">📋 Copy Tailscale URL</button>
+                <div class="url-hint" style="margin-top: 12px;">Copy this URL and paste it in Molly → Settings → Notifications → UnifiedPush → Register</div>
+            </div>
+
+            <!-- Method 4: Local Network Only -->
+            <div class="connection-box" style="border: 2px solid #ff9800;">
+                <div class="connection-label">Method 4: Local Network Only (Home WiFi Only)</div>
+                <div style="background: #2d1f1a; padding: 12px; border-radius: 6px; margin-bottom: 12px; border-left: 4px solid #ff9800;">
+                    <div style="font-size: 12px; color: #ffb74d; line-height: 1.5;">
+                        <strong>⚠️ WARNING:</strong> This URL only works when your phone is connected to your home WiFi. Notifications will <strong>stop working when you leave home</strong>. Only use this if your device never leaves the house (e.g., a tablet). For phones, use the Tailscale URL above.
+                    </div>
+                </div>
+                <div class="connection-url" id="localGatewayUrl" style="cursor: pointer; user-select: all;" onclick="copyUrl(this, 'local')" title="Click to copy">
+                    Loading...
+                </div>
+                <button onclick="copyUrl(this, 'local')" class="link-button secondary" style="margin-top: 10px; border-color: #ff9800; color: #ffb74d;">📋 Copy Local URL</button>
+                <div class="url-hint" style="margin-top: 12px;">Only works on your home WiFi network. Not recommended for phones.</div>
+            </div>
         </div>
 
         <div class="info-banner important">
@@ -338,23 +402,22 @@
             For this gateway to work, Tailscale must stay enabled on your phone at all times. Don't worry about battery drain - when you're at home, Tailscale automatically uses direct local connections for maximum efficiency!
         </div>
 
-        <div class="local-access">
-            <h4>📍 Testing from Local Network (Optional)</h4>
-            <p>You can also access the gateway directly from devices on your home WiFi using:</p>
-            <p><code id="localUrl">http://loading...</code></p>
-            <p style="margin-top: 8px; font-size: 12px; font-style: italic; color: #888;">Note: This only works on your local network. Your phone must use the Tailscale URL above.</p>
-        </div>
-
         <div class="steps-guide">
-            <h3>📋 How to Connect Your Phone</h3>
+            <h3>📋 How to Register Molly</h3>
+            <p style="margin-bottom: 15px; color: #b0b3c8;">Choose whichever method is easiest for you:</p>
             <ol>
-                <li><strong>Install Tailscale</strong> on your phone from Play Store / F-Droid</li>
-                <li><strong>Log in to Tailscale</strong> with the same account as your Pi</li>
-                <li><strong>Keep Tailscale enabled</strong> - it will stay on even when phone restarts</li>
+                <li><strong>Install Tailscale</strong> on your phone from Play Store / F-Droid and log in with the same account as your Pi</li>
+                <li><strong>Keep Tailscale enabled</strong> (skip this if using Method 4: Local Network Only)</li>
                 <li><strong>Open Molly</strong> → Settings → Notifications → <code>UnifiedPush</code></li>
-                <li>Tap <strong>"Register"</strong> and paste the <strong>Tailscale URL</strong> from above</li>
-                <li>Scan the QR code that appears</li>
-                <li>✅ Done! You'll receive notifications at home and away</li>
+                <li><strong>Choose a registration method:</strong>
+                    <ul style="margin-top: 8px; margin-left: 20px;">
+                        <li><strong>Method 1 - QR Code:</strong> Tap "Scan QR Code" and scan the code above (works from desktop or another device)</li>
+                        <li><strong>Method 2 - Direct Link:</strong> Tap the "Open Gateway" button, then copy the URL from browser and paste in Molly</li>
+                        <li><strong>Method 3 - Copy Tailscale URL:</strong> Click "Copy Tailscale URL", then paste in Molly's UnifiedPush settings (works everywhere)</li>
+                        <li><strong>Method 4 - Local Network Only:</strong> Click "Copy Local URL", then paste in Molly (⚠️ only works on home WiFi - for tablets/devices that never leave home)</li>
+                    </ul>
+                </li>
+                <li>✅ Done! You'll receive notifications (everywhere with Tailscale, home-only with local URL)</li>
             </ol>
         </div>
 
@@ -378,8 +441,63 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script>
         let networkData = {};
+        let qrCodeGenerated = false;
+        
+        // Copy URL to clipboard
+        function copyUrl(element, type) {
+            const urlElement = type === 'local' ? document.getElementById('localGatewayUrl') : document.getElementById('gatewayUrl');
+            const urlText = urlElement.textContent;
+            
+            if (urlText === 'Loading...' || urlText === 'Waiting for Tailscale...' || urlText === 'Not available') {
+                alert('URL not ready yet. Please wait a moment.');
+                return;
+            }
+            
+            navigator.clipboard.writeText(urlText).then(() => {
+                const btn = element.tagName === 'BUTTON' ? element : element.parentElement.querySelector('button');
+                const originalText = btn.textContent;
+                btn.textContent = '✅ Copied!';
+                btn.style.background = '#00c853';
+                btn.style.borderColor = '#00c853';
+                btn.style.color = 'white';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '';
+                    btn.style.borderColor = '';
+                    btn.style.color = '';
+                }, 2000);
+            }).catch(err => {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = urlText;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('URL copied to clipboard!');
+            });
+        }
+        
+        // Generate QR code
+        function generateQRCode(url) {
+            if (qrCodeGenerated) {
+                document.getElementById('qrcode').innerHTML = '';
+            }
+            
+            new QRCode(document.getElementById('qrcode'), {
+                text: url,
+                width: 256,
+                height: 256,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            
+            qrCodeGenerated = true;
+        }
         
         // Update Status and Network Info
         function updateStatus() {
@@ -403,15 +521,35 @@
                 const tailscaleIp = data.tailscale_ip;
                 if (tailscaleIp && tailscaleIp !== 'unknown') {
                     const url = `http://${tailscaleIp}:8080`;
+                    
+                    // Update URL text
                     document.getElementById('gatewayUrl').textContent = url;
-                    document.getElementById('link').href = url;
+                    
+                    // Generate QR code
+                    generateQRCode(url);
+                    
+                    // Set direct link
+                    document.getElementById('directLink').href = url;
                 } else {
                     document.getElementById('gatewayUrl').textContent = 'Waiting for Tailscale...';
-                    document.getElementById('link').href = '#';
-                    document.getElementById('link').onclick = (e) => {
+                    document.getElementById('directLink').href = '#';
+                    document.getElementById('directLink').onclick = (e) => {
                         e.preventDefault();
                         alert('Tailscale is still connecting. Please wait a moment and refresh.');
                     };
+                }
+                
+                // Update local network URL
+                const localIp = data.local_ip;
+                const hostname = data.hostname;
+                if (hostname && hostname !== 'unknown') {
+                    const localUrl = `http://${hostname}.local:8080`;
+                    document.getElementById('localGatewayUrl').textContent = localUrl;
+                } else if (localIp && localIp !== 'unknown') {
+                    const localUrl = `http://${localIp}:8080`;
+                    document.getElementById('localGatewayUrl').textContent = localUrl;
+                } else {
+                    document.getElementById('localGatewayUrl').textContent = 'Not available';
                 }
                 
                 // Update local URL for reference
