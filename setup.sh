@@ -54,13 +54,31 @@ else
     echo "[INFO] Docker already installed"
 fi
 
-# 5. Install Docker Compose
-if ! command -v docker-compose &> /dev/null; then
-    echo "[INFO] Installing Docker Compose..."
-    sudo apt-get install -y docker-compose
-    echo "[INFO] Docker Compose installed"
+# 5. Verify Docker Compose is available
+# Docker's install script includes compose as a plugin
+echo "[INFO] Checking Docker Compose availability..."
+if docker compose version &> /dev/null; then
+    echo "[INFO] Docker Compose plugin available"
+    DOCKER_COMPOSE_CMD="docker compose"
+    
+    # Create compatibility wrapper for old docker-compose command
+    if ! command -v docker-compose &> /dev/null; then
+        echo "[INFO] Creating docker-compose compatibility wrapper..."
+        sudo tee /usr/local/bin/docker-compose > /dev/null << 'EOF'
+#!/bin/bash
+# Wrapper to make 'docker compose' work as 'docker-compose'
+exec docker compose "$@"
+EOF
+        sudo chmod +x /usr/local/bin/docker-compose
+        echo "[INFO] Compatibility wrapper created"
+    fi
+elif command -v docker-compose &> /dev/null; then
+    echo "[INFO] Docker Compose standalone available"
+    DOCKER_COMPOSE_CMD="docker-compose"
 else
-    echo "[INFO] Docker Compose already installed"
+    echo "[ERROR] Docker Compose not found"
+    echo "This should not happen - Docker installation includes Compose plugin"
+    exit 1
 fi
 
 # 6. Install Tailscale
