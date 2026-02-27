@@ -2,34 +2,57 @@ import os
 import subprocess
 import secrets
 import time
-from flask import Flask, render_template, request, Response, send_file
+import sqlite3
+import json
+from flask import Flask, render_template, request, Response, send_file, jsonify
 
 app = Flask(__name__)
 
 def generate_vapid():
     return secrets.token_urlsafe(32)
 
-def get_local_ip():
-    """Get the local network IP address"""
+def get_devices():
+    """Query MollySocket database for registered devices"""
+    db_path = './data/mollysocket.db'
+    
+    if not os.path.exists(db_path):
+        return []
+    
     try:
-        result = subprocess.check_output(["hostname", "-I"]).decode("utf-8").strip()
-        return result.split()[0] if result else None
-    except:
-        return None
-
-def get_tailscale_ip():
-    """Get the Tailscale IP address"""
-    try:
-        return subprocess.check_output(["tailscale", "ip", "-4"]).decode("utf-8").strip()
-    except:
-        return None
-
-def get_hostname():
-    """Get the local hostname"""
-    try:
-        return subprocess.check_output(["hostname"]).decode("utf-8").strip()
-    except:
-        return None
+        conn = sqlite3.connect(db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        # Query the connections table (MollySocket stores devices here)
+        cursor.execute("""
+            SELECT 
+                uuid,
+                device_id,
+                endpoint,
+                created,
+                last_ping
+            FROM connections
+            ORDER BY created DESC
+        """)
+        
+        devices = []
+        for row in cursor.fetchall():
+            devices.append({
+                'uuid': row['uuid'],
+                'device_id': row['device_id'] if row['device_id'] else 'Unknown',
+                'endpoint': row['endpoint'],
+                'created': row['created'],
+                'last_ping': row['last_ping'] if row['last_ping'] else 'Never'
+            })
+        
+        conn.close()
+        return devices
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+        return []
+    except Exception as e:
+        print(f"Error reading devices: {e}")
+        return []
 
 @app.route('/')
 def index():
@@ -51,57 +74,37 @@ def setup():
             yield "Connecting to Tailscale...\n"
             subprocess.run(f"sudo tailscale up --authkey={ts_key} --hostname={name} --netfilter-mode=off --reset", shell=True)
 
-            # Get all network addresses
-            ts_ip = get_tailscale_ip()
-            local_ip = get_local_ip()
-            hostname = get_hostname()
-            
-            yield f"Tailscale IP: {ts_ip}\n"
-            yield f"Local IP: {local_ip}\n"
-            yield f"Hostname: {hostname}\n"
+            # Get network info
+            ts_ip = subprocess.check_output(["tailscale", "ip", "-4"]).decode("utf-8").strip()
+            local_ip = subprocess.check_output(["hostname", "-I"]).decode("utf-8").split()[0]
+            hostname = subprocess.check_output(["hostname"]).decode("utf-8").strip()
             
             yield "Generating keys and .env config...\n"
             vapid = generate_vapid()
-            
-            # Write .env with correct variable names for MollySocket
-            # IMPORTANT: MOLLY_ALLOWED_ENDPOINTS must be JSON array format ["*"]
             with open(".env", "w") as f:
                 f.write(f"# MollySocket Configuration\n")
-                f.write(f"# CRITICAL: Use MOLLY_VAPID_PRIVKEY (not MOLLY_VAPID_KEY)\n")
                 f.write(f"MOLLY_VAPID_PRIVKEY={vapid}\n")
-                f.write(f'# CRITICAL: MOLLY_ALLOWED_ENDPOINTS must be JSON array format\n')
                 f.write(f'MOLLY_ALLOWED_ENDPOINTS=["*"]\n')
-                f.write(f"# Network Information\n")
+                f.write(f"\n# Network Information\n")
                 f.write(f"TAILSCALE_IP={ts_ip}\n")
                 f.write(f"LOCAL_IP={local_ip}\n")
                 f.write(f"HOSTNAME={hostname}\n")
 
             yield "Pulling and starting Molly Engine (this takes a moment)...\n"
+            # We run this synchronously so the stream stays open until Docker is 'done'
             subprocess.run(["sudo", "docker-compose", "pull"], check=True)
             subprocess.run(["sudo", "docker-compose", "up", "-d", "--force-recreate"], check=True)
             
-            # Wait up to 20 seconds for the container to start properly
-            yield "Waiting for container to start...\n"
-            for i in range(20):
-                check = subprocess.run(["sudo", "docker", "ps", "--filter", "name=molly-socket", "--filter", "status=running", "--format", "{{.Names}}"], capture_output=True, text=True)
+            # Wait up to 10 seconds for the container to actually appear in the system
+            for i in range(10):
+                check = subprocess.run(["sudo", "docker", "ps", "-a", "--filter", "name=molly-socket", "--format", "{{.Names}}"], capture_output=True, text=True)
                 if "molly-socket" in check.stdout:
-                    # Container is running, now check logs for errors
-                    time.sleep(2)  # Give it a moment to start up
-                    logs = subprocess.run(["sudo", "docker", "logs", "--tail", "5", "molly-socket"], capture_output=True, text=True)
-                    if "ERROR" not in logs.stderr and "ERROR" not in logs.stdout:
-                        yield f"SUCCESS: Gateway ready!\n"
-                        yield f"Tailscale URL: http://{ts_ip}:8080\n"
-                        yield f"Local test URL: http://{local_ip}:8080\n"
-                        yield "REDIRECT_NOW\n"
-                        return
-                    else:
-                        yield f"WARNING: Container started but showing errors. Check logs.\n"
-                        return
+                    yield "SUCCESS: Container initialized. Redirecting...\n"
+                    return
                 time.sleep(1)
-                if i % 3 == 0:
-                    yield "."
+                yield "Waiting for container to spawn...\n"
 
-            yield "WARNING: Container is taking a long time to start. Check dashboard logs.\n"
+            yield "WARNING: Container is taking a long time to start. Check dashboard in a moment.\n"
 
         except Exception as e:
             yield f"ERROR: {str(e)}\n"
@@ -113,17 +116,56 @@ def health():
     result = subprocess.run(["sudo", "docker", "inspect", "-f", "{{.State.Status}}", "molly-socket"], capture_output=True, text=True)
     status = result.stdout.strip()
     
-    # Get all network information
-    ts_ip = get_tailscale_ip()
-    local_ip = get_local_ip()
-    hostname = get_hostname()
+    # Get network info from .env
+    env_data = {}
+    if os.path.exists('.env'):
+        with open('.env', 'r') as f:
+            for line in f:
+                if '=' in line and not line.startswith('#'):
+                    key, value = line.strip().split('=', 1)
+                    env_data[key.lower()] = value
     
     return {
         "status": status if status else "starting",
-        "tailscale_ip": ts_ip or "unknown",
-        "local_ip": local_ip or "unknown",
-        "hostname": hostname or "unknown"
+        "tailscale_ip": env_data.get('tailscale_ip', 'unknown'),
+        "local_ip": env_data.get('local_ip', 'unknown'),
+        "hostname": env_data.get('hostname', 'unknown')
     }
+
+@app.route('/devices')
+def list_devices():
+    """List all registered devices"""
+    devices = get_devices()
+    return jsonify({
+        'count': len(devices),
+        'devices': devices
+    })
+
+@app.route('/devices/remove/<uuid>', methods=['POST'])
+def remove_device(uuid):
+    """Remove a device from the database"""
+    db_path = './data/mollysocket.db'
+    
+    if not os.path.exists(db_path):
+        return jsonify({'status': 'error', 'message': 'Database not found'}), 404
+    
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        # Delete the device
+        cursor.execute("DELETE FROM connections WHERE uuid = ?", (uuid,))
+        conn.commit()
+        
+        if cursor.rowcount > 0:
+            conn.close()
+            return jsonify({'status': 'success', 'message': 'Device removed'})
+        else:
+            conn.close()
+            return jsonify({'status': 'error', 'message': 'Device not found'}), 404
+            
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/logs')
 def get_logs():
@@ -136,15 +178,10 @@ def download_config():
 
 @app.route('/reset-gateway', methods=['POST'])
 def reset_gateway():
-    try:
-        subprocess.run(["sudo", "docker-compose", "down"], check=True, timeout=30)
-        if os.path.exists('.env'): 
-            os.remove('.env')
-        if os.path.exists('data'): 
-            subprocess.run(["sudo", "rm", "-rf", "data"], check=True, timeout=10)
-        return {"status": "success"}
-    except Exception as e:
-        return {"status": "error", "message": str(e)}, 500
+    subprocess.run(["sudo", "docker-compose", "down"], check=True)
+    if os.path.exists('.env'): os.remove('.env')
+    subprocess.run(["sudo", "rm", "-rf", "./data"], check=True)
+    return {"status": "success"}
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=80)

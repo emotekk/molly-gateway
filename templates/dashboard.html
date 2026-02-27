@@ -19,7 +19,7 @@
             padding: 40px; 
             border-radius: 16px; 
             width: 100%; 
-            max-width: 750px; 
+            max-width: 900px; 
             box-shadow: 0 10px 40px rgba(0,0,0,0.5);
         }
         
@@ -67,6 +67,129 @@
             100% { transform: rotate(360deg); }
         }
         
+        /* Device Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .stat-card.green {
+            background: linear-gradient(135deg, #00c853 0%, #00e676 100%);
+        }
+        .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+            color: white;
+        }
+        .stat-label {
+            font-size: 13px;
+            color: rgba(255,255,255,0.9);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 5px;
+        }
+        
+        /* Devices Section */
+        .devices-section {
+            background: #252841;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+        }
+        .devices-section h2 {
+            color: #fff;
+            font-size: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        .devices-section h2::before {
+            content: "📱";
+            margin-right: 10px;
+            font-size: 24px;
+        }
+        
+        .device-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .device-item {
+            background: #1a1c2e;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid #00c853;
+        }
+        .device-info {
+            flex: 1;
+        }
+        .device-name {
+            font-size: 14px;
+            color: #fff;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .device-uuid {
+            font-size: 12px;
+            color: #888;
+            font-family: 'Courier New', monospace;
+        }
+        .device-meta {
+            font-size: 11px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .device-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .btn-remove {
+            padding: 8px 16px;
+            background: transparent;
+            border: 2px solid #ff5252;
+            color: #ff5252;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        .btn-remove:hover {
+            background: rgba(255, 82, 82, 0.1);
+        }
+        .btn-remove:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        .empty-state-text {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        .empty-state-hint {
+            font-size: 13px;
+            color: #888;
+        }
+        
         .info-section {
             background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
             padding: 25px;
@@ -81,7 +204,7 @@
             align-items: center;
         }
         .info-section h2::before {
-            content: "📱";
+            content: "🔗";
             margin-right: 10px;
             font-size: 24px;
         }
@@ -151,27 +274,8 @@
             font-size: 13px;
         }
         
-        .mobile-notice {
-            background: #2d1f1a;
-            border-left: 4px solid #ff9800;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 13px;
-            line-height: 1.6;
-            display: none;
-        }
-        .mobile-notice.show {
-            display: block;
-        }
-        .mobile-notice strong {
-            color: #ffb74d;
-            display: block;
-            margin-bottom: 8px;
-        }
-        
         .info-banner {
-            background: #1f2937;
+            background: #252841;
             border-left: 4px solid #3b82f6;
             padding: 18px;
             border-radius: 8px;
@@ -179,82 +283,10 @@
             font-size: 14px;
             line-height: 1.6;
         }
-        .info-banner.important {
-            background: #2d1f1a;
-            border-left-color: #ff9800;
-        }
         .info-banner strong {
             color: #60a5fa;
             display: block;
             margin-bottom: 8px;
-        }
-        .info-banner.important strong {
-            color: #ffb74d;
-        }
-        
-        .steps-guide {
-            background: #252841;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 25px;
-            border-left: 4px solid #00c853;
-        }
-        .steps-guide h3 {
-            color: #fff;
-            font-size: 16px;
-            margin-bottom: 15px;
-        }
-        .steps-guide ol {
-            margin-left: 20px;
-        }
-        .steps-guide li {
-            font-size: 14px;
-            line-height: 1.8;
-            color: #b0b3c8;
-            margin-bottom: 10px;
-        }
-        .steps-guide code {
-            background: #0f111a;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: 'Courier New', monospace;
-            color: #00ff00;
-        }
-        .steps-guide strong {
-            color: #818cf8;
-        }
-        .steps-guide.mobile {
-            display: none;
-        }
-        .steps-guide.desktop {
-            display: block;
-        }
-        
-        .local-access {
-            background: #252841;
-            padding: 18px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 4px solid #4f46e5;
-        }
-        .local-access h4 {
-            color: #818cf8;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-        .local-access p {
-            font-size: 13px;
-            color: #b0b3c8;
-            line-height: 1.6;
-            margin-bottom: 8px;
-        }
-        .local-access code {
-            background: #0f111a;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: 'Courier New', monospace;
-            color: #818cf8;
-            font-size: 12px;
         }
         
         .action-grid { 
@@ -341,6 +373,17 @@
             .container { padding: 25px; }
             h1 { font-size: 24px; }
             .action-grid { grid-template-columns: 1fr; }
+            .device-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .device-actions {
+                margin-top: 10px;
+                width: 100%;
+            }
+            .btn-remove {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -351,84 +394,52 @@
             <div id="statusTag" class="status-tag starting">Checking...</div>
         </div>
 
-        <div class="info-section">
-            <h2>Register Your Phone</h2>
-            <p>Choose any method below to connect your Molly app. All methods register the same gateway.</p>
-            
-            <!-- Method 1: QR Code -->
-            <div class="connection-box">
-                <div class="connection-label">Method 1: Scan QR Code (Recommended)</div>
-                <div style="text-align: center; padding: 20px; background: white; border-radius: 8px; margin-bottom: 12px;">
-                    <div id="qrcode" style="display: inline-block;"></div>
-                </div>
-                <div class="url-hint">📸 Open Molly → Settings → Notifications → UnifiedPush → Scan QR code</div>
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card green">
+                <div class="stat-number" id="deviceCount">0</div>
+                <div class="stat-label">Connected Devices</div>
             </div>
-
-            <!-- Method 2: Direct Link (Mobile) -->
-            <div class="connection-box">
-                <div class="connection-label">Method 2: Direct Link</div>
-                <a id="directLink" href="#" target="_blank" class="link-button">📱 Open Gateway in Browser</a>
-                <div class="url-hint" style="margin-top: 12px;">Tap the button above, then copy the URL and paste it in Molly → Settings → Notifications → UnifiedPush → Register</div>
-            </div>
-
-            <!-- Method 3: Copy URL Text -->
-            <div class="connection-box">
-                <div class="connection-label">Method 3: Copy Tailscale URL Manually</div>
-                <div class="connection-url" id="gatewayUrl" style="cursor: pointer; user-select: all;" onclick="copyUrl(this, 'tailscale')" title="Click to copy">
-                    Loading...
-                </div>
-                <button onclick="copyUrl(this, 'tailscale')" class="link-button secondary" style="margin-top: 10px;">📋 Copy Tailscale URL</button>
-                <div class="url-hint" style="margin-top: 12px;">Copy this URL and paste it in Molly → Settings → Notifications → UnifiedPush → Register</div>
-            </div>
-
-            <!-- Method 4: Local Network Only -->
-            <div class="connection-box" style="border: 2px solid #ff9800;">
-                <div class="connection-label">Method 4: Local Network Only (Home WiFi Only)</div>
-                <div style="background: #2d1f1a; padding: 12px; border-radius: 6px; margin-bottom: 12px; border-left: 4px solid #ff9800;">
-                    <div style="font-size: 12px; color: #ffb74d; line-height: 1.5;">
-                        <strong>⚠️ WARNING:</strong> This URL only works when your phone is connected to your home WiFi. Notifications will <strong>stop working when you leave home</strong>. Only use this if your device never leaves the house (e.g., a tablet). For phones, use the Tailscale URL above.
-                    </div>
-                </div>
-                <div class="connection-url" id="localGatewayUrl" style="cursor: pointer; user-select: all;" onclick="copyUrl(this, 'local')" title="Click to copy">
-                    Loading...
-                </div>
-                <button onclick="copyUrl(this, 'local')" class="link-button secondary" style="margin-top: 10px; border-color: #ff9800; color: #ffb74d;">📋 Copy Local URL</button>
-                <div class="url-hint" style="margin-top: 12px;">Only works on your home WiFi network. Not recommended for phones.</div>
+            <div class="stat-card">
+                <div class="stat-number" id="statusIcon">●</div>
+                <div class="stat-label">Gateway Status</div>
             </div>
         </div>
 
-        <div class="info-banner important">
-            <strong>⚠️ Important: Keep Tailscale Running on Your Phone</strong>
-            For this gateway to work, Tailscale must stay enabled on your phone at all times. Don't worry about battery drain - when you're at home, Tailscale automatically uses direct local connections for maximum efficiency!
-        </div>
-
-        <div class="steps-guide">
-            <h3>📋 How to Register Molly</h3>
-            <p style="margin-bottom: 15px; color: #b0b3c8;">Choose whichever method is easiest for you:</p>
-            <ol>
-                <li><strong>Install Tailscale</strong> on your phone from Play Store / F-Droid and log in with the same account as your Pi</li>
-                <li><strong>Keep Tailscale enabled</strong> (skip this if using Method 4: Local Network Only)</li>
-                <li><strong>Open Molly</strong> → Settings → Notifications → <code>UnifiedPush</code></li>
-                <li><strong>Choose a registration method:</strong>
-                    <ul style="margin-top: 8px; margin-left: 20px;">
-                        <li><strong>Method 1 - QR Code:</strong> Tap "Scan QR Code" and scan the code above (works from desktop or another device)</li>
-                        <li><strong>Method 2 - Direct Link:</strong> Tap the "Open Gateway" button, then copy the URL from browser and paste in Molly</li>
-                        <li><strong>Method 3 - Copy Tailscale URL:</strong> Click "Copy Tailscale URL", then paste in Molly's UnifiedPush settings (works everywhere)</li>
-                        <li><strong>Method 4 - Local Network Only:</strong> Click "Copy Local URL", then paste in Molly (⚠️ only works on home WiFi - for tablets/devices that never leave home)</li>
-                    </ul>
-                </li>
-                <li>✅ Done! You'll receive notifications (everywhere with Tailscale, home-only with local URL)</li>
-            </ol>
+        <!-- Connected Devices -->
+        <div class="devices-section">
+            <h2>Connected Devices</h2>
+            <div id="deviceList" class="device-list">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📱</div>
+                    <div class="empty-state-text">No devices connected yet</div>
+                    <div class="empty-state-hint">Register your first device using the gateway URL below</div>
+                </div>
+            </div>
         </div>
 
         <div class="info-banner">
-            <strong>💡 How It Works at Home</strong>
-            When your phone is on the same WiFi as your Pi, Tailscale intelligently creates a direct peer-to-peer connection. This means your notifications still route through your local network for speed, even though you're using the Tailscale URL. No internet relay needed!
+            <strong>💡 Multiple Devices Supported</strong>
+            This gateway can serve unlimited devices! Each person in your family can register their own phone or tablet. Just have everyone follow the registration steps below with the same gateway URL - each device will automatically get its own unique endpoint.
+        </div>
+
+        <div class="info-section">
+            <h2>Register New Device</h2>
+            <p>Use this URL to register any Molly device. Each device will get its own unique endpoint automatically.</p>
+            
+            <div class="connection-box">
+                <div class="connection-label">Gateway URL (All Devices Use This)</div>
+                <div class="connection-url" id="gatewayUrl">Loading...</div>
+                <button onclick="copyUrl(this, 'tailscale')" class="link-button secondary">📋 Copy URL</button>
+            </div>
+
+            <a id="directLink" href="#" target="_blank" class="link-button">📱 Open Gateway</a>
         </div>
 
         <h3 style="color: #fff; margin-bottom: 15px; font-size: 18px;">🛠️ Management Tools</h3>
         <div class="action-grid">
-            <button onclick="fetchLogs()" class="btn btn-outline">📋 View Live Logs</button>
+            <button onclick="refreshDevices()" class="btn btn-outline">🔄 Refresh Devices</button>
+            <button onclick="fetchLogs()" class="btn btn-outline">📋 View Logs</button>
             <a href="/download-config" class="btn btn-outline">💾 Download Config</a>
             <button id="resetBtn" onclick="resetGateway()" class="btn btn-danger" style="grid-column: 1 / -1;">🗑️ Reset Gateway</button>
         </div>
@@ -441,115 +452,34 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script>
         let networkData = {};
-        let qrCodeGenerated = false;
         
         // Copy URL to clipboard
         function copyUrl(element, type) {
-            console.log('copyUrl called with type:', type);
-            const urlElement = type === 'local' ? document.getElementById('localGatewayUrl') : document.getElementById('gatewayUrl');
-            const urlText = urlElement.textContent;
-            console.log('URL to copy:', urlText);
+            const urlText = document.getElementById('gatewayUrl').textContent;
             
-            if (urlText === 'Loading...' || urlText === 'Waiting for Tailscale...' || urlText === 'Not available') {
+            if (urlText === 'Loading...' || urlText === 'Waiting for Tailscale...') {
                 alert('URL not ready yet. Please wait a moment.');
                 return;
             }
             
-            // Try modern clipboard API first
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(urlText).then(() => {
-                    console.log('Copied successfully with clipboard API');
-                    updateButtonFeedback(element);
-                }).catch(err => {
-                    console.error('Clipboard API failed:', err);
-                    fallbackCopy(urlText, element);
-                });
-            } else {
-                console.log('Clipboard API not available, using fallback');
-                fallbackCopy(urlText, element);
-            }
-        }
-        
-        // Update button to show success feedback
-        function updateButtonFeedback(element) {
-            // Find the button - if element is the button, use it; otherwise find the button in the same connection-box
-            let btn;
-            if (element.tagName === 'BUTTON') {
-                btn = element;
-            } else {
-                // Element is the div, find the button in the same parent container
-                const container = element.closest('.connection-box');
-                btn = container ? container.querySelector('button') : null;
-            }
-            
-            if (btn) {
+            navigator.clipboard.writeText(urlText).then(() => {
+                const btn = element;
                 const originalText = btn.textContent;
-                const originalBg = btn.style.background;
-                const originalBorder = btn.style.borderColor;
-                const originalColor = btn.style.color;
-                
                 btn.textContent = '✅ Copied!';
                 btn.style.background = '#00c853';
                 btn.style.borderColor = '#00c853';
                 btn.style.color = 'white';
-                
                 setTimeout(() => {
                     btn.textContent = originalText;
-                    btn.style.background = originalBg;
-                    btn.style.borderColor = originalBorder;
-                    btn.style.color = originalColor;
+                    btn.style.background = '';
+                    btn.style.borderColor = '';
+                    btn.style.color = '';
                 }, 2000);
-            }
-        }
-        
-        // Fallback copy method for older browsers
-        function fallbackCopy(text, element) {
-            const textArea = document.createElement('textarea');
-            textArea.value = text;
-            textArea.style.position = 'fixed';
-            textArea.style.top = '0';
-            textArea.style.left = '0';
-            textArea.style.opacity = '0';
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-            
-            try {
-                const successful = document.execCommand('copy');
-                if (successful) {
-                    console.log('Fallback copy successful');
-                    updateButtonFeedback(element);
-                } else {
-                    console.error('Fallback copy failed');
-                    alert('Failed to copy. Please copy manually: ' + text);
-                }
-            } catch (err) {
-                console.error('Fallback copy error:', err);
-                alert('Failed to copy. Please copy manually: ' + text);
-            }
-            
-            document.body.removeChild(textArea);
-        }
-        
-        // Generate QR code
-        function generateQRCode(url) {
-            if (qrCodeGenerated) {
-                document.getElementById('qrcode').innerHTML = '';
-            }
-            
-            new QRCode(document.getElementById('qrcode'), {
-                text: url,
-                width: 256,
-                height: 256,
-                colorDark: '#000000',
-                colorLight: '#ffffff',
-                correctLevel: QRCode.CorrectLevel.H
+            }).catch(err => {
+                alert('Copy failed. Please copy manually: ' + urlText);
             });
-            
-            qrCodeGenerated = true;
         }
         
         // Update Status and Network Info
@@ -564,52 +494,31 @@
                 
                 if (status === 'running') {
                     tag.classList.add('running');
+                    document.getElementById('statusIcon').innerText = '✓';
                 } else if (status === 'starting' || status === 'restarting') {
                     tag.classList.add('starting');
+                    document.getElementById('statusIcon').innerText = '⋯';
                 } else {
                     tag.classList.add('offline');
+                    document.getElementById('statusIcon').innerText = '✗';
                 }
                 
                 // Update Tailscale URL
                 const tailscaleIp = data.tailscale_ip;
                 if (tailscaleIp && tailscaleIp !== 'unknown') {
                     const url = `http://${tailscaleIp}:8080`;
-                    
-                    // Update URL text
                     document.getElementById('gatewayUrl').textContent = url;
-                    
-                    // Generate QR code
-                    generateQRCode(url);
-                    
-                    // Set direct link
                     document.getElementById('directLink').href = url;
                 } else {
                     document.getElementById('gatewayUrl').textContent = 'Waiting for Tailscale...';
                     document.getElementById('directLink').href = '#';
-                    document.getElementById('directLink').onclick = (e) => {
-                        e.preventDefault();
-                        alert('Tailscale is still connecting. Please wait a moment and refresh.');
-                    };
-                }
-                
-                // Update local network URL
-                const localIp = data.local_ip;
-                const hostname = data.hostname;
-                if (hostname && hostname !== 'unknown') {
-                    const localUrl = `http://${hostname}.local:8080`;
-                    document.getElementById('localGatewayUrl').textContent = localUrl;
-                } else if (localIp && localIp !== 'unknown') {
-                    const localUrl = `http://${localIp}:8080`;
-                    document.getElementById('localGatewayUrl').textContent = localUrl;
-                } else {
-                    document.getElementById('localGatewayUrl').textContent = 'Not available';
                 }
                 
                 // Network info footer
                 let infoText = [];
-                if (localIp && localIp !== 'unknown') infoText.push(`Local: ${localIp}`);
+                if (data.local_ip && data.local_ip !== 'unknown') infoText.push(`Local: ${data.local_ip}`);
                 if (tailscaleIp && tailscaleIp !== 'unknown') infoText.push(`Tailscale: ${tailscaleIp}`);
-                if (hostname && hostname !== 'unknown') infoText.push(`Hostname: ${hostname}`);
+                if (data.hostname && data.hostname !== 'unknown') infoText.push(`Hostname: ${data.hostname}`);
                 document.getElementById('networkInfo').textContent = infoText.join(' • ');
                 
             }).catch(err => {
@@ -619,11 +528,85 @@
             });
         }
         
+        // Fetch and display devices
+        function refreshDevices() {
+            fetch('/devices').then(r => r.json()).then(data => {
+                const count = data.count || 0;
+                const devices = data.devices || [];
+                
+                document.getElementById('deviceCount').textContent = count;
+                
+                const listEl = document.getElementById('deviceList');
+                
+                if (count === 0) {
+                    listEl.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📱</div>
+                            <div class="empty-state-text">No devices connected yet</div>
+                            <div class="empty-state-hint">Register your first device using the gateway URL below</div>
+                        </div>
+                    `;
+                } else {
+                    listEl.innerHTML = devices.map((device, idx) => `
+                        <div class="device-item">
+                            <div class="device-info">
+                                <div class="device-name">Device ${idx + 1} ${device.device_id !== 'Unknown' ? '(' + device.device_id + ')' : ''}</div>
+                                <div class="device-uuid">${device.uuid}</div>
+                                <div class="device-meta">
+                                    Registered: ${formatDate(device.created)} 
+                                    ${device.last_ping !== 'Never' ? '• Last ping: ' + formatDate(device.last_ping) : ''}
+                                </div>
+                            </div>
+                            <div class="device-actions">
+                                <button class="btn-remove" onclick="removeDevice('${device.uuid}')">🗑️ Remove</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }).catch(err => {
+                console.error('Failed to fetch devices:', err);
+            });
+        }
+        
+        // Format date for display
+        function formatDate(timestamp) {
+            if (!timestamp || timestamp === 'Never') return 'Never';
+            try {
+                const date = new Date(timestamp * 1000); // Unix timestamp to JS Date
+                return date.toLocaleString();
+            } catch {
+                return timestamp;
+            }
+        }
+        
+        // Remove a device
+        function removeDevice(uuid) {
+            if (!confirm('Are you sure you want to remove this device?\n\nThe user will need to re-register their Molly app.')) {
+                return;
+            }
+            
+            fetch(`/devices/remove/${uuid}`, { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert('Device removed successfully');
+                        refreshDevices();
+                    } else {
+                        alert('Failed to remove device: ' + data.message);
+                    }
+                })
+                .catch(err => {
+                    alert('Error removing device: ' + err.message);
+                });
+        }
+        
         // Initial load
         updateStatus();
+        refreshDevices();
         
-        // Refresh status every 10 seconds
+        // Refresh every 10 seconds
         setInterval(updateStatus, 10000);
+        setInterval(refreshDevices, 10000);
 
         function fetchLogs() {
             const area = document.getElementById('log-area');
@@ -638,11 +621,10 @@
         }
 
         function resetGateway() {
-            if(confirm("⚠️ Are you sure?\n\nThis will:\n• Stop the gateway\n• Delete your configuration\n• Remove all data\n\nYou'll need to set up again from scratch.")) {
+            if(confirm("⚠️ Are you sure?\n\nThis will:\n• Stop the gateway\n• Delete your configuration\n• Remove ALL registered devices\n• Erase all data\n\nYou'll need to set up again from scratch.")) {
                 const btn = document.getElementById('resetBtn');
                 const originalText = btn.innerHTML;
                 
-                // Show loading state
                 btn.disabled = true;
                 btn.innerHTML = '<span class="spinner"></span>Resetting...';
                 
