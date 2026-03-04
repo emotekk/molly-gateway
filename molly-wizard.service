@@ -1,14 +1,15 @@
 [Unit]
 Description=Molly Gateway Wizard
-After=network.target tailscaled.service
+After=network.target docker.service
+Requires=docker.service
 
 [Service]
 Type=simple
 User=root
 WorkingDirectory=/home/pi/molly-gateway
 ExecStart=/usr/bin/python3 /home/pi/molly-gateway/wizard.py
-Restart=always
-Environment=PYTHONUNBUFFERED=1
+Restart=on-failure
+RestartSec=10
 
-[Install] 
+[Install]
 WantedBy=multi-user.target

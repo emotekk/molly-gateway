@@ -1,26 +1,20 @@
-version: '3.8' 
+version: '3.8'
 
 services:
   molly-socket:
-    image: ghcr.io/mollyim/mollysocket:1.6-debian
+    image: ghcr.io/mollyim/mollysocket:latest
     container_name: molly-socket
+    restart: unless-stopped
     network_mode: host
-    restart: always
-    env_file: .env
+    env_file:
+      - .env
+    environment:
+      - MOLLY_PORT=8080
+      - MOLLY_HOST=0.0.0.0
     volumes:
       - ./data:/data
-    environment:
-      # Database and server configuration
-      - MOLLY_DB=/data/mollysocket.db
-      - MOLLY_HOST=0.0.0.0
-      - MOLLY_PORT=8080
-      - MOLLY_WEBSERVER=true
-      - RUST_LOG=info
-      # IMPORTANT: Don't set MOLLY_VAPID_PRIVKEY or MOLLY_ALLOWED_ENDPOINTS here
-      # They are loaded from .env file via env_file directive above
     logging:
       driver: "json-file"
       options:
-        max-size: "10mb"
+        max-size: "10m"
         max-file: "3"
-    command: server

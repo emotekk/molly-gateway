@@ -91,11 +91,10 @@ def setup():
                 f.write(f"HOSTNAME={hostname}\n")
 
             yield "Pulling and starting Molly Engine (this takes a moment)...\n"
-            # We run this synchronously so the stream stays open until Docker is 'done'
             subprocess.run(["sudo", "docker-compose", "pull"], check=True)
             subprocess.run(["sudo", "docker-compose", "up", "-d", "--force-recreate"], check=True)
             
-            # Wait up to 10 seconds for the container to actually appear in the system
+            # Wait up to 10 seconds for the container to actually appear
             for i in range(10):
                 check = subprocess.run(["sudo", "docker", "ps", "-a", "--filter", "name=molly-socket", "--format", "{{.Names}}"], capture_output=True, text=True)
                 if "molly-socket" in check.stdout:
@@ -152,8 +151,6 @@ def remove_device(uuid):
     try:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
-        
-        # Delete the device
         cursor.execute("DELETE FROM connections WHERE uuid = ?", (uuid,))
         conn.commit()
         

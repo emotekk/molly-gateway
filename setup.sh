@@ -59,7 +59,6 @@ fi
 echo "[INFO] Checking Docker Compose availability..."
 if docker compose version &> /dev/null; then
     echo "[INFO] Docker Compose plugin available"
-    DOCKER_COMPOSE_CMD="docker compose"
     
     # Create compatibility wrapper for old docker-compose command
     if ! command -v docker-compose &> /dev/null; then
@@ -74,7 +73,6 @@ EOF
     fi
 elif command -v docker-compose &> /dev/null; then
     echo "[INFO] Docker Compose standalone available"
-    DOCKER_COMPOSE_CMD="docker-compose"
 else
     echo "[ERROR] Docker Compose not found"
     echo "This should not happen - Docker installation includes Compose plugin"
