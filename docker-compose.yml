@@ -6,6 +6,7 @@ services:
     container_name: molly-socket
     restart: unless-stopped
     network_mode: host
+    command: server
     env_file:
       - .env
     environment:
