@@ -427,13 +427,37 @@
             <h2>Register New Device</h2>
             <p>Use this URL to register any Molly device. Each device will get its own unique endpoint automatically.</p>
             
+            <h3 style="font-size: 15px; margin-bottom: 12px; margin-top: 0;">✅ Recommended: Tailscale URL (Works Everywhere)</h3>
             <div class="connection-box">
-                <div class="connection-label">Gateway URL (All Devices Use This)</div>
+                <div class="connection-label">Gateway URL via Tailscale</div>
                 <div class="connection-url" id="gatewayUrl">Loading...</div>
                 <button onclick="copyUrl(this, 'tailscale')" class="link-button secondary">📋 Copy URL</button>
+                <div class="url-hint" style="margin-top: 10px;">
+                    ✅ Works at home and away<br>
+                    ✅ Secure encrypted connection<br>
+                    ✅ Recommended for phones that leave home
+                </div>
             </div>
 
-            <a id="directLink" href="#" target="_blank" class="link-button">📱 Open Gateway</a>
+            <a id="directLink" href="#" target="_blank" class="link-button">📱 Open Gateway in Browser</a>
+            
+            <div style="border-top: 2px solid rgba(255,255,255,0.1); margin: 25px 0;"></div>
+            
+            <h3 style="font-size: 15px; margin-bottom: 12px;">⚠️ Optional: Local Network Only (WiFi Only)</h3>
+            <div class="connection-box" style="background: rgba(255, 152, 0, 0.15); border: 2px solid #ff9800;">
+                <div style="background: #ff9800; color: white; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-size: 13px; font-weight: bold;">
+                    ⚠️ WARNING: Notifications will STOP when you leave home WiFi
+                </div>
+                <div class="connection-label" style="color: #ffb74d;">Local Network URL (Home WiFi Only)</div>
+                <div class="connection-url" id="localUrl" style="border: 2px solid #ff9800;">Loading...</div>
+                <button onclick="copyUrl(this, 'local')" class="link-button secondary" style="background: rgba(255, 152, 0, 0.2); border-color: #ff9800; color: #ffb74d;">📋 Copy Local URL</button>
+                <div class="url-hint" style="margin-top: 10px; color: #ffb74d;">
+                    ⚠️ Only works on your home WiFi network<br>
+                    ⚠️ Notifications stop when you leave home<br>
+                    ✅ Good for: Tablets that never leave home<br>
+                    ❌ Bad for: Phones you take outside
+                </div>
+            </div>
         </div>
 
         <h3 style="color: #fff; margin-bottom: 15px; font-size: 18px;">🛠️ Management Tools</h3>
@@ -457,9 +481,15 @@
         
         // Copy URL to clipboard
         function copyUrl(element, type) {
-            const urlText = document.getElementById('gatewayUrl').textContent;
+            let urlText;
             
-            if (urlText === 'Loading...' || urlText === 'Waiting for Tailscale...') {
+            if (type === 'tailscale') {
+                urlText = document.getElementById('gatewayUrl').textContent;
+            } else if (type === 'local') {
+                urlText = document.getElementById('localUrl').textContent;
+            }
+            
+            if (urlText === 'Loading...' || urlText === 'Waiting for Tailscale...' || urlText === 'Not available') {
                 alert('URL not ready yet. Please wait a moment.');
                 return;
             }
@@ -512,6 +542,22 @@
                 } else {
                     document.getElementById('gatewayUrl').textContent = 'Waiting for Tailscale...';
                     document.getElementById('directLink').href = '#';
+                }
+                
+                // Update Local Network URL
+                const localIp = data.local_ip;
+                const hostname = data.hostname;
+                if (localIp && localIp !== 'unknown') {
+                    // Prefer hostname.local if available, otherwise use IP
+                    let localUrl;
+                    if (hostname && hostname !== 'unknown') {
+                        localUrl = `http://${hostname}.local:8080`;
+                    } else {
+                        localUrl = `http://${localIp}:8080`;
+                    }
+                    document.getElementById('localUrl').textContent = localUrl;
+                } else {
+                    document.getElementById('localUrl').textContent = 'Not available';
                 }
                 
                 // Network info footer
