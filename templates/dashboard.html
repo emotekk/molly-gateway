@@ -489,27 +489,57 @@
                 urlText = document.getElementById('localUrl').textContent;
             }
             
-            if (urlText === 'Loading...' || urlText === 'Waiting for Tailscale...' || urlText === 'Not available') {
+            if (!urlText || urlText === 'Loading...' || urlText === 'Waiting for Tailscale...' || urlText === 'Not available') {
                 alert('URL not ready yet. Please wait a moment.');
                 return;
             }
             
-            navigator.clipboard.writeText(urlText).then(() => {
-                const btn = element;
-                const originalText = btn.textContent;
-                btn.textContent = '✅ Copied!';
-                btn.style.background = '#00c853';
-                btn.style.borderColor = '#00c853';
-                btn.style.color = 'white';
-                setTimeout(() => {
-                    btn.textContent = originalText;
-                    btn.style.background = '';
-                    btn.style.borderColor = '';
-                    btn.style.color = '';
-                }, 2000);
-            }).catch(err => {
-                alert('Copy failed. Please copy manually: ' + urlText);
-            });
+            // Try modern clipboard API first
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(urlText).then(() => {
+                    updateCopyButton(element, true);
+                }).catch(() => {
+                    // Fallback if clipboard API fails
+                    fallbackCopy(urlText, element);
+                });
+            } else {
+                // Browser doesn't support clipboard API (HTTP or old browser)
+                fallbackCopy(urlText, element);
+            }
+        }
+        
+        // Fallback copy method for browsers without clipboard API
+        function fallbackCopy(text, button) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                updateCopyButton(button, true);
+            } catch (err) {
+                alert('Copy failed. Please copy manually:\n\n' + text);
+            }
+            
+            document.body.removeChild(textArea);
+        }
+        
+        // Update copy button appearance
+        function updateCopyButton(btn, success) {
+            const originalText = btn.textContent;
+            btn.textContent = success ? '✅ Copied!' : '❌ Failed';
+            btn.style.background = success ? '#00c853' : '#ff5252';
+            btn.style.borderColor = success ? '#00c853' : '#ff5252';
+            btn.style.color = 'white';
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.background = '';
+                btn.style.borderColor = '';
+                btn.style.color = '';
+            }, 2000);
         }
         
         // Update Status and Network Info
