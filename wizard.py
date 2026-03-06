@@ -87,13 +87,55 @@ def setup():
             )
             
             if result.returncode != 0:
-                yield f"❌ Tailscale connection failed!\n"
-                yield f"   Error: {result.stderr}\n"
-                yield f"   Return code: {result.returncode}\n"
-                yield "\n💡 Common fixes:\n"
-                yield "   - Check your auth key is valid\n"
-                yield "   - Try generating a new key at https://login.tailscale.com/admin/settings/keys\n"
-                yield "   - Make sure the key is marked as 'Reusable'\n"
+                yield f"\n❌ Tailscale Connection Failed!\n"
+                yield f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                
+                error_msg = result.stderr.strip()
+                if error_msg:
+                    yield f"\n📋 Error Details:\n{error_msg}\n\n"
+                
+                # Check for specific error patterns
+                if "already exists" in error_msg.lower() or "already exists" in result.stdout.lower():
+                    yield "🔍 Problem: This device is already registered in Tailscale\n\n"
+                    yield "✅ SOLUTION - Choose ONE option:\n\n"
+                    yield f"   Option 1: Remove from Tailscale Admin (Recommended)\n"
+                    yield f"   ├─ Go to: https://login.tailscale.com/admin/machines\n"
+                    yield f"   ├─ Find your Pi (look for hostname: {name})\n"
+                    yield f"   ├─ Click ⋮ (three dots) → Delete\n"
+                    yield f"   └─ Then click 'Reset Gateway' in dashboard and try again\n\n"
+                    yield f"   Option 2: Force Logout Locally\n"
+                    yield f"   ├─ SSH into your Pi\n"
+                    yield f"   ├─ Run: sudo tailscale logout\n"
+                    yield f"   ├─ Run: sudo tailscale down\n"
+                    yield f"   └─ Then click 'Reset Gateway' in dashboard and try again\n\n"
+                
+                elif "expired" in error_msg.lower() or "invalid" in error_msg.lower():
+                    yield "🔍 Problem: Auth key is expired or invalid\n\n"
+                    yield "✅ SOLUTION:\n"
+                    yield "   1. Go to: https://login.tailscale.com/admin/settings/keys\n"
+                    yield "   2. Generate a NEW auth key\n"
+                    yield "   3. Make sure to check 'Reusable'\n"
+                    yield "   4. Copy the new key\n"
+                    yield "   5. Refresh this page and try again with new key\n\n"
+                
+                elif "timeout" in error_msg.lower() or len(error_msg) == 0:
+                    yield "🔍 Problem: Connection timed out\n\n"
+                    yield "✅ SOLUTION - Check:\n"
+                    yield "   1. Internet connection: ping 8.8.8.8\n"
+                    yield "   2. Tailscale service: sudo systemctl status tailscaled\n"
+                    yield "   3. Try generating a new auth key\n\n"
+                
+                else:
+                    yield "💡 Common Solutions:\n"
+                    yield "   - Generate a new auth key\n"
+                    yield "   - Remove old device from Tailscale admin\n"
+                    yield "   - Check internet connection\n"
+                    yield "   - Run: sudo tailscale logout && sudo tailscale down\n\n"
+                
+                yield "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                yield "\n⚠️  Setup cannot continue until this is resolved.\n"
+                yield "\n💡 After fixing, refresh this page and try again.\n"
+                yield "Or click 'Reset Gateway' button when you see the dashboard.\n"
                 return
 
             # Get network info

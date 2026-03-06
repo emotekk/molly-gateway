@@ -292,6 +292,18 @@
                 function read() {
                     reader.read().then(({done, value}) => {
                         if (done) { 
+                            // Check if there was an error (don't reload if error)
+                            const logText = logs.innerHTML;
+                            if (logText.includes('❌') || logText.includes('Setup cannot continue')) {
+                                // Error occurred - don't reload, re-enable button
+                                btn.disabled = false;
+                                btn.textContent = '🔄 Try Again';
+                                logs.innerHTML += '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+                                logs.innerHTML += 'Ready to try again after fixing the issue above.\n';
+                                return;
+                            }
+                            
+                            // Success - redirect
                             logs.innerHTML += '\n✅ Setup complete! Redirecting to dashboard...\n';
                             setTimeout(() => location.reload(), 2000);
                             return; 
@@ -302,7 +314,7 @@
                         logs.scrollTop = logs.scrollHeight;
                         
                         // Check for success message
-                        if (text.includes('REDIRECT_NOW')) {
+                        if (text.includes('SUCCESS')) {
                             document.querySelectorAll('.step')[2].classList.add('active');
                         }
                         
