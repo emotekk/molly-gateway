@@ -2,43 +2,325 @@
 <html>
 <head>
     <title>Molly Gateway Setup</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style> 
-        body { font-family: sans-serif; background: #0f111a; color: #e0e0e0; padding: 40px; display: flex; justify-content: center; }
-        .container { background: #1a1c2e; padding: 30px; border-radius: 12px; width: 100%; max-width: 500px; }
-        .info-card { background: #252841; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #4f46e5; font-size: 14px; }
-        input { width: 100%; padding: 12px; background: #0f111a; border: 1px solid #2d314d; border-radius: 6px; color: #fff; margin-top: 10px; box-sizing: border-box; }
-        button { width: 100%; padding: 14px; background: #4f46e5; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 20px; }
-        #logs { margin-top: 20px; background: #000; padding: 15px; border-radius: 6px; font-family: monospace; font-size: 12px; height: 150px; overflow-y: auto; white-space: pre-wrap; color: #818cf8; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+            background: linear-gradient(135deg, #0f111a 0%, #1a1c2e 100%);
+            color: #e0e0e0; 
+            padding: 20px;
+            min-height: 100vh;
+            display: flex; 
+            justify-content: center;
+            align-items: center;
+        }
+        .container { 
+            background: #1a1c2e; 
+            padding: 40px; 
+            border-radius: 16px; 
+            width: 100%; 
+            max-width: 600px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        h1 { 
+            color: #fff; 
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            color: #818cf8;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            padding: 0 20px;
+        }
+        .step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+        .step::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            width: 100%;
+            height: 2px;
+            background: #2d314d;
+            z-index: 0;
+        }
+        .step:first-child::before { display: none; }
+        .step-circle {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #2d314d;
+            color: #666;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            position: relative;
+            z-index: 1;
+        }
+        .step.active .step-circle {
+            background: #4f46e5;
+            color: white;
+        }
+        .step-label {
+            font-size: 11px;
+            margin-top: 8px;
+            color: #666;
+        }
+        .step.active .step-label {
+            color: #818cf8;
+        }
+        
+        .info-card { 
+            background: #252841; 
+            padding: 20px; 
+            border-radius: 12px; 
+            margin-bottom: 25px; 
+            border-left: 4px solid #4f46e5;
+        }
+        .info-card h3 {
+            color: #fff;
+            font-size: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+        }
+        .info-card h3::before {
+            content: "ℹ️";
+            margin-right: 8px;
+        }
+        .info-card p {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #b0b3c8;
+            margin-bottom: 8px;
+        }
+        .info-card ol {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+        .info-card li {
+            font-size: 14px;
+            line-height: 1.8;
+            color: #b0b3c8;
+            margin-bottom: 6px;
+        }
+        .info-card a {
+            color: #818cf8;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .info-card a:hover {
+            color: #a5b4fc;
+            text-decoration: underline;
+        }
+        
+        .input-group {
+            margin-bottom: 25px;
+        }
+        label { 
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #fff;
+            font-size: 14px;
+        }
+        input { 
+            width: 100%; 
+            padding: 14px; 
+            background: #0f111a; 
+            border: 2px solid #2d314d; 
+            border-radius: 8px; 
+            color: #fff; 
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #4f46e5;
+        }
+        input::placeholder {
+            color: #666;
+        }
+        
+        button { 
+            width: 100%; 
+            padding: 16px; 
+            background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            cursor: pointer;
+            font-size: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(79, 70, 229, 0.4);
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        #logs { 
+            margin-top: 25px; 
+            background: #000; 
+            padding: 20px; 
+            border-radius: 8px; 
+            font-family: 'Courier New', monospace; 
+            font-size: 12px; 
+            height: 200px; 
+            overflow-y: auto; 
+            white-space: pre-wrap; 
+            color: #00ff00;
+            border: 2px solid #2d314d;
+            display: none;
+        }
+        #logs.active {
+            display: block;
+        }
+        
+        .warning-box {
+            background: #2d1f1a;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #ffb74d;
+        }
+        
+        @media (max-width: 600px) {
+            .container { padding: 25px; }
+            h1 { font-size: 24px; }
+            .step-label { font-size: 9px; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Gateway Setup</h1>
-        <div class="info-card">
-            <b>How it works:</b> This creates a private bridge via <a href="https://login.tailscale.com/admin/settings/keys" target="_blank" style="color:#818cf8">Tailscale</a>. Your data remains private but reachable by your phone.
+        <h1>🛡️ Molly Gateway Setup</h1>
+        <p class="subtitle">Private push notifications for de-Googled Android</p>
+        
+        <div class="step-indicator">
+            <div class="step active">
+                <div class="step-circle">1</div>
+                <div class="step-label">Get Key</div>
+            </div>
+            <div class="step">
+                <div class="step-circle">2</div>
+                <div class="step-label">Deploy</div>
+            </div>
+            <div class="step">
+                <div class="step-circle">3</div>
+                <div class="step-label">Link Phone</div>
+            </div>
         </div>
-        <label>Tailscale Auth Key</label>
-        <input type="password" id="key" placeholder="tskey-auth-xxxx">
-        <button onclick="start()" id="btn">Deploy Gateway</button>
-        <div id="logs">Ready...</div>
+        
+        <div class="info-card">
+            <h3>What is this?</h3>
+            <p>This gateway creates a private, encrypted bridge between your Molly app and Signal's servers using <strong>Tailscale</strong> (a zero-trust VPN). Your phone can receive push notifications without Google Play Services.</p>
+        </div>
+        
+        <div class="info-card">
+            <h3>Setup Instructions</h3>
+            <ol>
+                <li>Go to <a href="https://login.tailscale.com/admin/settings/keys" target="_blank">Tailscale Admin Console</a></li>
+                <li>Click <strong>"Generate auth key"</strong></li>
+                <li>Enable <strong>"Reusable"</strong> and <strong>"Ephemeral"</strong> (optional but recommended)</li>
+                <li>Copy the key (starts with <code>tskey-auth-...</code>)</li>
+                <li>Paste it below and click <strong>Deploy Gateway</strong></li>
+            </ol>
+        </div>
+        
+        <div class="warning-box">
+            ⚠️ <strong>First-time setup takes 2-3 minutes.</strong> The system will download Docker images and configure networking. Don't close this page!
+        </div>
+        
+        <div class="input-group">
+            <label for="key">🔑 Tailscale Auth Key</label>
+            <input type="password" id="key" placeholder="tskey-auth-xxxxxxxxxxxx-xxxxxxxxxxxxxxxx">
+        </div>
+        
+        <button onclick="start()" id="btn">🚀 Deploy Gateway</button>
+        
+        <div id="logs">Ready to deploy...\n</div>
     </div>
+    
     <script>
         function start() {
+            const key = document.getElementById('key').value.trim();
             const btn = document.getElementById('btn');
+            const logs = document.getElementById('logs');
+            
+            if (!key) {
+                alert('Please enter your Tailscale auth key');
+                return;
+            }
+            
+            if (!key.startsWith('tskey-auth-')) {
+                alert('Invalid key format. Key should start with "tskey-auth-"');
+                return;
+            }
+            
             btn.disabled = true;
-            fetch(`/setup?key=${document.getElementById('key').value}`).then(response => {
+            btn.textContent = '⏳ Deploying...';
+            logs.classList.add('active');
+            logs.innerHTML = 'Starting deployment...\n';
+            
+            // Update step indicator
+            document.querySelectorAll('.step')[1].classList.add('active');
+            
+            fetch(`/setup?key=${encodeURIComponent(key)}`).then(response => {
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
+                
                 function read() {
                     reader.read().then(({done, value}) => {
-                        if (done) { location.reload(); return; }
-                        document.getElementById('logs').innerHTML += decoder.decode(value);
+                        if (done) { 
+                            logs.innerHTML += '\n✅ Setup complete! Redirecting to dashboard...\n';
+                            setTimeout(() => location.reload(), 2000);
+                            return; 
+                        }
+                        
+                        const text = decoder.decode(value);
+                        logs.innerHTML += text;
+                        logs.scrollTop = logs.scrollHeight;
+                        
+                        // Check for success message
+                        if (text.includes('REDIRECT_NOW')) {
+                            document.querySelectorAll('.step')[2].classList.add('active');
+                        }
+                        
                         read();
                     });
                 }
                 read();
+            }).catch(error => {
+                logs.innerHTML += `\n❌ ERROR: ${error.message}\n`;
+                btn.disabled = false;
+                btn.textContent = '🚀 Deploy Gateway';
             });
         }
+        
+        // Allow Enter key to submit
+        document.getElementById('key').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') start();
+        });
     </script>
 </body>
 </html>
