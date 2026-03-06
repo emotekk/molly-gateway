@@ -76,6 +76,9 @@ def setup():
             yield "🔗 Disconnecting any previous Tailscale connection...\n"
             subprocess.run("sudo tailscale logout 2>/dev/null", shell=True, timeout=10)
             subprocess.run("sudo tailscale down 2>/dev/null", shell=True, timeout=10)
+            # Wipe local state file to completely reset node identity
+            subprocess.run("sudo rm -f /var/lib/tailscale/tailscaled.state 2>/dev/null", shell=True, timeout=5)
+            time.sleep(2)  # Give tailscaled time to notice state file is gone
             
             yield "🔗 Connecting to Tailscale (this may take 30 seconds)...\n"
             result = subprocess.run(
@@ -97,17 +100,20 @@ def setup():
                 # Check for specific error patterns
                 if "already exists" in error_msg.lower() or "already exists" in result.stdout.lower():
                     yield "🔍 Problem: This device is already registered in Tailscale\n\n"
-                    yield "✅ SOLUTION - Choose ONE option:\n\n"
-                    yield f"   Option 1: Remove from Tailscale Admin (Recommended)\n"
+                    yield "✅ SOLUTION - Try these in order:\n\n"
+                    yield f"   Step 1: Complete Local Reset (Do this first!)\n"
+                    yield f"   ├─ SSH into your Pi\n"
+                    yield f"   ├─ Run: sudo systemctl stop tailscaled\n"
+                    yield f"   ├─ Run: sudo rm -f /var/lib/tailscale/tailscaled.state\n"
+                    yield f"   ├─ Run: sudo systemctl start tailscaled\n"
+                    yield f"   └─ Verify: sudo tailscale status (should say 'Logged out.')\n\n"
+                    yield f"   Step 2: Remove from Tailscale Admin (if Step 1 didn't work)\n"
                     yield f"   ├─ Go to: https://login.tailscale.com/admin/machines\n"
                     yield f"   ├─ Find your Pi (look for hostname: {name})\n"
                     yield f"   ├─ Click ⋮ (three dots) → Delete\n"
-                    yield f"   └─ Then click 'Reset Gateway' in dashboard and try again\n\n"
-                    yield f"   Option 2: Force Logout Locally\n"
-                    yield f"   ├─ SSH into your Pi\n"
-                    yield f"   ├─ Run: sudo tailscale logout\n"
-                    yield f"   ├─ Run: sudo tailscale down\n"
-                    yield f"   └─ Then click 'Reset Gateway' in dashboard and try again\n\n"
+                    yield f"   └─ Then try setup again\n\n"
+                    yield f"   Step 3: Try Setup Again\n"
+                    yield f"   └─ After Step 1 or 2, refresh this page and use a NEW auth key\n\n"
                 
                 elif "expired" in error_msg.lower() or "invalid" in error_msg.lower():
                     yield "🔍 Problem: Auth key is expired or invalid\n\n"
@@ -330,9 +336,10 @@ def reset_gateway():
         # Stop container
         subprocess.run(["sudo", "docker-compose", "down"], check=True, timeout=30)
         
-        # Disconnect and logout from Tailscale
+        # Completely wipe Tailscale (logout, down, and delete state)
         subprocess.run(["sudo", "tailscale", "logout"], check=False, timeout=10)
         subprocess.run(["sudo", "tailscale", "down"], check=False, timeout=10)
+        subprocess.run(["sudo", "rm", "-f", "/var/lib/tailscale/tailscaled.state"], check=False, timeout=5)
         
         # Remove config and data
         if os.path.exists('.env'):
@@ -345,3 +352,4 @@ def reset_gateway():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=80, debug=False)
+    
